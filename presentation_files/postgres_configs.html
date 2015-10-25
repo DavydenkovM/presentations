@@ -93,71 +93,266 @@
             <h2>
             Настройка сервера
             </h2>
+
+            <ul>
+              <li> используемая память </li>
+              <li> журнал транзакций (WAL)</li>
+              <li> планировщик запросов </li>
+              <li> сбор статистики </li>
+            </ul>
         </section>
 
         <section>
-          <h2>Основные параметры</h2>
           <section>
-              <img width="900" height="500" data-src="postgres_configs/top_adjustments.png" alt="arch2">
+            <img width="800" height="500" data-src="postgres_configs/top_adjustments.png" alt="top_adjustments">
           </section>
+          <section>
+            <img width="800" height="500" data-src="postgres_configs/top_kernel_adjustments.png" alt="kernel_adjustments">
+          </section>
+        </section>
+
+        <section>
           <section>
             <h2>
-              Настройки памяти. Shared buffers
+              Настройки памяти. shared buffers
             </h2>
-            <stoege>
-            совместно используемая память (разделяемая между процессами), выделяемая сервером PostgreSQL для кэширования данных, определяется числом страниц (shared_buffers) по 8 килобайт каждая
+            <p>
+            совместно используемая память (разделяемая между процессами), выделяемая сервером postgresql для кэширования данных, определяется числом страниц (shared_buffers) по 8 килобайт каждая
+            </p>
+            <p>
+             1/4 - 1/8 ram, для более тонкой настройки можно воспользоваться pg_buffercache из contrib (проверяем закешированы ли наиболее популярные таблицы), а также утилитами ipcs, free или vmstat
             </p>
           </section>
 
           <section>
-            <p>
-              shared_buffers
-            </p>
-            <ul>
-              <li> 7e версии - появился журнал транзакций, неблокирующий VACUUM, подсистема статисткики, команда ANALYZE (гистограмма распределения данных в столбцах) </li>
-            </ul>
+            <h2>
+              Настройки памяти. shared buffers
+            </h2>
+            <pre><code class="sql">
+              # Запрос, показывающий использование буферов объектами
+              SELECT c.relname , count(*) AS buffers
+              FROM pg_buffercache b INNER JOIN pg_class c
+              ON b.relfilenode = pg_relation_filenode(c.oid) AND
+              b.reldatabase IN (0 , (SELECT oid FROM pg_database WHERE
+              datname = current_database()))
+              GROUP BY c.relname
+              ORDER BY 2 DESC
+              LIMIT 100;
+
+              # Запрос, показывающий таблицы/индексы в кэше с кол-вом использований
+              SELECT c.relname, count(*) AS buffers, usagecount
+              FROM pg_class c
+              INNER JOIN pg_buffercache b
+              ON b.relfilenode = c.relfilenode
+              INNER JOIN pg_database d
+              ON (b.reldatabase = d.oid AND d.datname = current_database())
+              GROUP BY c.relname, usagecount
+              ORDER BY c.relname, usagecount;
+
+              # Запрос, который показывает какой процент общего буфера используют
+              обьекты (таблицы и индексы) и на сколько процентов объекты находятся
+              в самом кэше (буфере)
+              SELECT c.relname, pg_size_pretty(count(*) * 8192) as buffered,
+                     round(100.0 * count(*) / (SELECT setting FROM pg_settings
+                       WHERE name = 'shared_buffers')::integer, 1) AS buffers_percent,
+                     round(100.0 * count(*) * 8192 / pg_table_size(c.oid), 1) AS percent_of_relation
+              FROM pg_class c
+              INNER JOIN pg_buffercache b
+              ON b.relfilenode = c.relfilenode
+              INNER JOIN pg_database d
+              ON (b.reldatabase = d.oid AND d.datname = current_database())
+              GROUP BY c.oid , c.relname
+              ORDER BY 3 DESC
+              LIMIT 20;
+            </code></pre>
           </section>
 
-          <!-- Example of nested vertical slides -->
           <section>
+            <h2>
+              Настройки памяти. shared buffers
+            </h2>
             <p>
-            Не использовать настройки по умолчанию!
+              Используя эти данные можно проанализировать для каких объектов
+              не хватает памяти или какие из них потребляют основную часть общего
+              буфера. На основе этих данных можно более правильно делать тюнинг
+              shared_buffers параметра для PostgreSQL.
+            </p>
+          </section>
+
+          <section>
+              <h2>
+                настройки памяти. work_mem
+              </h2>
+              <p>
+                неразделяемая память (per backend), определяющая максимальное количество оперативной памяти, которое может быть затрачено на операцию (сортировка, аггрегация и тп.)
+              </p>
+              <p>
+                ~1/25 RAM. Если объём памяти недостаточен для сортировки некоторого результата, то серверный процесс будет использовать временные файлы. Если же
+                объём памяти слишком велик, то это может привести к своппингу.
+              </p>
+          </section>
+
+          <section>
+              <h2>
+                настройки памяти. maintanance_work_mem
+              </h2>
+              <p>
+                Этот параметр задаёт объём памяти, используемый командами VACUUM, ANALYZE, CREATE INDEX, и добавления внешних ключей
+              </p>
+              <p>
+                ~1/4 RAM. От 50 до 75% размера вашей самой большой таблицы или индекса
+              </p>
+          </section>
+
+          <section>
+              <h2>
+                настройки памяти. maintanance_work_mem
+              </h2>
+              <p>
+                До версии 7.2 команда VACUUM полностью блокировала таблицу. Начиная с версии 7.2, команда VACUUM накладывает более слабую блоки ровку, позволяющую параллельно выполнять команды SELECT, INSERT, UPDATE и DELETE над обрабатываемой таблицей. Старый вариант команды называется теперь VACUUM FULL.
+              </p>
+
+              <p>
+                Новый вариант команды не пытается удалить все старые версии записей и, соответственно, уменьшить размер файла, содержащего таблицу, а лишь помечает занимаемое ими место как свободное
+              </p>
+          </section>
+
+          <section>
+            <h2>
+              настройки памяти. прочие настройки
+            </h2>
+            <p>
+              temp_buffers
+            </p>
+              <p>
+                Буфер под временные объекты, в основном для временных таблиц. Можно установить порядка 16 МБ
+              </p>
+          </section>
+
+          <section>
+            <h2>
+              настройки памяти. прочие настройки
+            </h2>
+            <p>
+              max_prepared_transactions
             </p>
             <p>
-            По умолчанию настройки для совместимости, а не для производительности (особенно память).
-            Нужно учитывать:
+              Количество одновременно подготавливаемых транзакций (PREPARE TRANSACTION). Можно оставить по дефолту — 5
+            </p>
+          </section>
+
+          <section>
+            <h2>
+              настройки памяти. прочие настройки
+            </h2>
+            <p>
+             vacuum_cost_delay
+            </p>
+            <p>
+              Если у вас большие таблицы, и производится много одновременных операций записи, вам может пригодиться функция, которая уменьшает затраты на I/O для VACUUM, растягивая его по времени. Чтобы включить эту функциональность, нужно поднять значение vacuum_cost_delay выше 0 (50 - 250 мс)
             </p>
 
-            <ul>
-              <li> конфигурацию компьютера </li>
-              <li> объём и тип хранимых данных </li>
-              <li> соотношение числа запросов на чтение / запись </li>
-              <li> запущены ли другие требовательные к ресурсам процессы  </li>
-            </ul>
+            <p>
+Для более тонкой настройки повышайте vacuum_cost_page_hit и понижайте vacuum_cost_page_limit . Это ослабит влияние VACUUM, увеличив время его выполнения. В тестах с параллельными транзакциями при значениях delay — 200, page_hit — 6 и page_limit —100 влияние VACUUM уменьшилось более чем на 80%, но его длительность увеличилась втрое
+            </p>
+          </section>
+
+          <section>
+            <h2>
+              настройки памяти. прочие настройки
+            </h2>
+            <p>
+              max_stack_depth
+            </p>
+            <p>
+              Специальный стек для сервера, в идеале он должен совпадать с размером стека, выставленном в ядре ОС (2-4 Мб).
+            </p>
+          </section>
+
+          <section>
+            <h2>
+              настройки памяти. прочие настройки
+            </h2>
+            <p>
+              max_files_per_process
+            </p>
+            <p>
+              Тут всё понятно. Уменьшите данный параметр, если в процессе работы наблюдается сообщение «Too many open files»
+            </p>
           </section>
         </section>
 
         <section>
           <section>
-            <h2>Vertical Slides</h2>
-            <p>Slides can be nested inside of each other.</p>
-            <p>Use the <em>Space</em> key to navigate through all slides.</p>
-            <br>
-            <a href="#" class="navigate-down">
-              <img width="178" height="238" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Down arrow">
-            </a>
+            <h2>Журнал транзакций (WAL)</h2>
+            <p>
+              Все изменения в файлах данных (в которых находятся таблицы и индексы) производятся только после того, как они были занесены в журнал транзакций, при этом записи в журнале должны быть гарантированно записаны на диск
+            </p>
           </section>
+
           <section>
-            <h2>Basement Level 1</h2>
-            <p>Nested slides are useful for adding additional detail underneath a high level horizontal slide.</p>
+            <h2>контрольные точки</h2>
+            <p>
+              данные из буферов сбрасываются на диск при проходе контрольной точки: либо при заполнении нескольких (параметр checkpoint_segments, по умолчанию 3) сегментов журнала транзакций, либо через определённый интервал времени (параметр checkpoint_timeout, измеряется в секундах, по умолчанию 300).
+            </p>
+            <p>
+              Меняем параметры, если операции на запись тормозят
+            </p>
           </section>
+
           <section>
-            <h2>Basement Level 2</h2>
-            <p>That's it, time to go back up.</p>
-            <br>
-            <a href="#/2">
-              <img width="178" height="238" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Up arrow" style="transform: rotate(180deg); -webkit-transform: rotate(180deg);">
-            </a>
+            <h2>контрольные точки</h2>
+            <p>
+              Если в базу заносятся большие объёмы данных, то контрольные точки могут происходить слишком часто. При этом производительность упадёт из-за постоянного сбрасывания на диск данных из буфера.
+            </p>
+
+            <ul>
+              <li> Можно выставить параметр checkpoint_warning == 60 (секунды) </li>
+              <li> Увеличить checkpoint_segments (для веба рекомендуется 32)</li>
+              <li> Размазать IO операции во времени, поставив checkpoint_completion_target - (0.7 - 0.9) </li>
+              </ul>
+
+              <a href="http://pgconfig.org" target="_blank"> http://www.pgconfig.org/ </a>
+          </section>
+
+          <section>
+            <h2>fsync и synchronous_commit</h2>
+            <p>
+              fsync OFF
+            </p>
+
+            <p>
+              Записи из журнала транзакций никогда не будут переносится на диск базой (вся тяжесть синхронизации write_buffers с диском ложится на плечи ОС). После сбоя проблемно восстановиться, т.к. неясно что из WAL синхронизовано, а что нет.
+            </p>
+
+            <p>
+              Не надо так делать, если дорожите данными. Но можно включить в девелопменте или в CI. (Связанный параметр full_page_writes)
+            </p>
+          </section>
+
+          <section>
+            <h2>fsync и synchronous_commit</h2>
+            <p>
+              synchronous_commit OFF
+            </p>
+
+            <p>
+              определяет нужно ли ждать WAL записи на диск перед возвратом успешного завершения транзакции для подключенного клиента
+            </p>
+
+            <p>
+              Не рискуем крахом базы, но рискуем потерять несинхронизованные транзакции (ROLLBACK, если их не удалось синхронизовать)
+            </p>
+
+              <a href="http://dba.stackexchange.com/questions/18509/difference-between-fsync-and-synchronous-commit-postgresql" target="_blank"> http://dba.stackexchange.com/questions/18509/difference-between-fsync-and-synchronous-commit-postgresql </a>
+          </section>
+
+          <section>
+            <h2>Журнал транзакций. Прочее</h2>
+            <p>
+              synchronous_commit OFF
+            </p>
+
           </section>
         </section>
 
