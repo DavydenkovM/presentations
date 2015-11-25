@@ -269,6 +269,45 @@
               <li> Поиск MapReduce решений для Postgresql и MatView</li>
             </ul>
           </section>
+
+          <section>
+            <pre><code class="sql">
+              CREATE DATABASE stoege_development2 WITH OWNER stoege;
+              \c stoege_development2
+
+              CREATE TABLE foreign_olymp_user_olympiads(
+              id INT PRIMARY KEY NOT NULL,
+              user_id INT NOT NULL,
+              olympiad_ID INT NOT NULL,
+              state CHAR(50),
+              position INT,
+              solved_tasks_count INT,
+              created_at timestamp,
+              updated_at timestamp);
+
+              INSERT INTO foreign_olymp_user_olympiads VALUES (
+              2989, 224485, 32, 'finished', NUL);
+
+              CREATE EXTENSION postgres_fdw;
+
+              CREATE SERVER localhost
+              FOREIGN DATA WRAPPER postgres_fdw
+              OPTIONS(host 'localhost', port '5432', dbname 'stoege_development2');
+
+              CREATE USER MAPPING FOR public SERVER
+              localhost
+              OPTIONS (user 'stoege', password 'dsfafafaf');
+
+              \c stoege_development
+
+              CREATE FOREIGN TABLE foreign_olymp_user_olympiads (id integer, user_id integer, olympiad_id integer, state char(50), position integer, solved_tasks_count integer, created_at timestamp, updated_at timestamp) SERVER localhost OPTIONS(table_name 'foreign_olymp_user_olympiads');
+
+              \dt;
+              \det;
+
+              SELECT * FROM users INNER JOIN foreign_olymp_user_olympiads ON users.id = foreign_olymp_user_olympiads.user_id;
+            </code></pre>
+          </section>
         </section>
 
         <section style="text-align: left;">
