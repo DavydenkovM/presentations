@@ -37,21 +37,11 @@
       <!-- Any section element inside of this container is displayed as a slide -->
       <div class="slides">
         <section>
-          <h1>Говорим о новом</h1>
-          <h3>Elixir как язык для бекенда микросервиса / веб приложения</h3>
+          <h2>Говорим о новом</h2>
+          <h3>Эликсир как язык для бекенда микросервиса / веб приложения</h3>
           <p>
             <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
           </p>
-        </section>
-
-        <section>
-          <section>
-              <img width="900" height="600" data-src="postgres_configs/postgres_arch1.png" alt="arch1">
-          </section>
-
-          <section>
-              <img width="900" height="600" data-src="postgres_configs/postgres_arch2.png" alt="arch2">
-          </section>
         </section>
 
         <section>
@@ -62,16 +52,17 @@
             <ul>
               <li> Что мы ждём от современного веб фреймворка и платформы для бекенда </li>
               <li> Рельсы, феникс и конкуренты </li>
-              <li> Что хорошего предлагает эликсир </li>
+              <li> Знакомимся с эликсиром, демки </li>
+              <li> Обзор phoenix приложения </li>
               <li> Заключение </li>
             </ul>
         </section>
 
         <section>
           <section>
-            <h2>
+            <h3>
             Ожидания от платформы / рантайма
-            </h2>
+            </h3>
 
             <ul>
               <li> Масштабируемость из коробки (при увеличении нагрузок вычисления могут быть реорганизованы без головной боли) </li>
@@ -84,9 +75,9 @@
           </section>
 
           <section>
-            <h2>
+            <h3>
             Ожидания от веб-фреймворка
-            </h2>
+            </h3>
 
             <ul>
               <li> Возможность работать с IO в неблокирующем стиле </li>
@@ -94,24 +85,41 @@
               <li> Прозрачный механизм сборки и управления ассетами </li>
               <li> Удобная прослойка для работы с БД </li>
               <li> Хороший тестовый фреймворк с возможностью запуска параллельных тестов </li>
-              <li> Наличие удобных хелперов (декораторы, локали) </li>
-              <li> Поддержка Websockets, SSE, HTTP2 </li>
+              <li> Наличие удобных хелперов (декораторы, локали, сервисы) </li>
+              <li> Нативная поддержка модных штук типа Websockets, SSE, HTTP2 </li>
             </ul>
           </section>
 
           <section>
-            <h2>
+            <h3>
             Дружелюбность к разработчику
-            </h2>
+            </h3>
             <ul>
               <li> Удобные инструменты работы с платформой (REPL, билд тулы, таск раннеры, дебагеры и тд.) </li>
               <li> Быстрая скорость разработки (интерактивная разработка) </li>
               <li> Приятный синтаксис </li>
-              <li> Наличие комьюнити, third-party библиотек</li>
+              <li> Наличие отзывчивого комьюнити, third-party библиотек, хорошая документация </li>
               <li> Возможности дебажить на продакшне </li>
             </ul>
           </section>
         </section>
+
+        <section>
+          <section>
+            <p> К сожалению не все языки и фреймворки соответствуют современным требованиям </p>
+          </section>
+
+          <section>
+            <p> Но иногда бывает так: </p>
+            <img width="900" height="600" data-src="elixir_as_backend/ruby-cpu1.gif" alt="arch1">
+          </section>
+
+          <section>
+            <p> Или так: </p>
+            <img width="900" height="600" data-src="elixir_as_backend/ruby-cpu2.jpg" alt="arch1">
+          </section>
+        </section>
+
 
         <section>
           <section>
@@ -123,22 +131,120 @@
               <li> node.js </li>
               <li> Go </li>
               <li> ASP.NET </li>
-              <li> JAVA фреймворки (SCALA play) </li>
-              <li> Разное из мира ФП (Clojure, Haskell, OCaml фреймворки)</li>
-              <li> django </li>
+              <li> JAVA фреймворки (Scala play) </li>
+              <li> Разное из мира ФП (uncommon web на Clojure, Haskell, OCaml)</li>
+              <li> django, catalyst, laravel даже не рассматриваем </li>
             </ul>
           </section>
         </section>
 
         <section>
-          <p> Что хорошего предлагает эликсир </p>
+          <p> Главная фишка эликсира - это эрланг :) Посмотрим чем может удивить эрланг! </p>
+        </section>
+
+        <section>
+          <p> Простейшие функции </p>
 
           <pre><code class="elixir">
-          list
-          |> Enum.filter(&(&1 > 0))       # take positive numbers
-          |> Enum.map(&(&1 * &1))         # square each one
-          |> Enum.reduce(0, &(&1 + &2))   # calculate sum
+          hello_func = fn ->
+            IO.puts "hello"
+          end
           </code></pre>
+        </section>
+
+        <section>
+          <p> Порождение процесса </p>
+
+          <pre><code class="elixir">
+          spawn(hello_func)
+          </code></pre>
+        </section>
+
+        <section>
+          <p> Порождение процесса, ожидающего сообщениe </p>
+
+          <pre><code class="elixir">
+          hello_func = fn ->
+            IO.puts "hello"
+            receive do
+              :goodbye ->
+                IO.puts "goodbye"
+              _ ->
+                IO.puts "unknown message"
+            end
+          end
+          </code></pre>
+        </section>
+
+        <section>
+          <p> Функция в модуле (c хвостовой рекурсией)</p>
+
+          <pre><code class="elixir">
+          defmodule Hello do
+            def hello_func do
+              IO.puts "hello"
+              receive do
+                :goodbye ->
+                  IO.puts "goodbye"
+                  hello_func
+                _ ->
+                  IO.puts "unknown message"
+                  hello_func
+              end
+            end
+          end
+
+          pid = spawn(Hello, :hello_func, [])
+          send(pid, :goodbye)
+          send(pid, :foobar)
+          </code></pre>
+        </section>
+
+        <section>
+          <p> Функция в модуле передающая стейт между вызовами (c хвостовой рекурсией)</p>
+
+          <pre><code class="elixir">
+          defmodule Hello do
+            def hello_func(counter) do
+              IO.puts "hello"
+              receive do
+                :goodbye ->
+                  IO.puts "You've said goodbye #{counter} times"
+                  new_counter = counter + 1
+                  hello_func(new_counter)
+                _ ->
+                  IO.puts "unknown message"
+                  hello_func(counter)
+              end
+            end
+          end
+
+          pid = spawn(Hello, :hello_func, [])
+          send(pid, :goodbye)
+          send(pid, :foobar)
+          </code></pre>
+        </section>
+
+        <section>
+          <p> Интроспекция в эрланге / эликсире </p>
+
+          <pre><code class="elixir">
+          :observer.start
+          </code></pre>
+        </section>
+
+        <section>
+          <p> Удобности для асинхронного кода (промисы)</p>
+
+          <pre><code class="elixir">
+          task = Task.async(fn -> 1 + 2 + 3 end)
+          res  = 4 + 5
+          res + Task.await(task)
+          </code></pre>
+        </section>
+
+        <section>
+          <p> Пример скрипта на async await (см. website_pipeline)</p>
         </section>
 
         <section style="text-align: left;">
