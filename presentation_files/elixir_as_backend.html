@@ -110,7 +110,7 @@
           </section>
 
           <section>
-            <p> Но иногда бывает так: </p>
+            <p> Иногда бывает так: </p>
             <img width="900" height="600" data-src="elixir_as_backend/ruby-cpu1.gif" alt="arch1">
           </section>
 
@@ -173,7 +173,11 @@
                 IO.puts "unknown message"
             end
           end
+
+          spawn(hello_func)
           </code></pre>
+
+          <p> Процесс завершается с exit(normal) и второй раз не отреагирует на наше сообщение, поэтому </p>
         </section>
 
         <section>
@@ -201,7 +205,7 @@
         </section>
 
         <section>
-          <p> Функция в модуле передающая стейт между вызовами (c хвостовой рекурсией)</p>
+          <p> Функция в модуле передающая стейт между вызовами (c хвостовой рекурсией). Кейсы в ресив блоке - пример паттерн матчинга </p>
 
           <pre><code class="elixir">
           defmodule Hello do
@@ -245,6 +249,38 @@
 
         <section>
           <p> Пример скрипта на async await (см. website_pipeline)</p>
+        </section>
+
+        <section>
+          <p> Любимая программа Джо Армстронга (распределённость)</p>
+
+          <pre><code class="elixir">
+          # shell 1
+          iex --name "foo@192.168.1.53"
+          :erlang.set_cookie(node(), :foobar)
+          :erlang.register(:shell, self())
+
+          returned_value = receive do
+            {:become, some_fn} ->
+              some_fn.()
+          end
+
+          #shell 2
+          iex --name "bar@192.168.1.136"
+          erlang.set_cookie(node(), :foobar)
+
+          echo_server = fn ->
+            receive do
+              {from, value} ->
+                send(from, value)
+            end
+          end
+
+          foo = {:shell, :"foo@192.168.1.53"}
+          send(foo, {:become, echo_server})
+          send(foo, {self, "hey there"})
+          flush()
+          </code></pre>
         </section>
 
         <section style="text-align: left;">
