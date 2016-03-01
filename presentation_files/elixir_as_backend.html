@@ -324,7 +324,7 @@
               end
             end
 
-            foo = {:shell, :"foo@192.168.1.53"}
+            foo = {:shell, :"foo@192.168.1.69"}
             send(foo, {:become, echo_server})
             send(foo, {self, "hey there"})
             flush()
