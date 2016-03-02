@@ -238,10 +238,15 @@
             <pre><code class="elixir">
             :observer.start
             </code></pre>
+
+            <p> А вообще тема серьёзная и требует изучения (есть разные интсрументы как в эрланге, так и в эликсире) <p>
+
+            <p> Можно почитать <a href="http://fprog.ru/2010/issue5/maxim-treskin-erlang-introspection/">тут</a> и <a href="http://levgem.livejournal.com/463349.html">тут</a> для ознакомления </p>
+
           </section>
 
           <section>
-            <p> Составление Пифагоровых троек через генераторы списков (List Comprehensions) </p>
+            <p> Составление пифагоровых троек через генераторы списков (List Comprehensions) </p>
 
             <pre><code class="elixir">
               defmodule Triple do
@@ -257,6 +262,8 @@
 
               Triple.pythagorean(48)
             </code></pre>
+
+            <p> LC используется в фениксовых темплейтах для работы с коллекциями </p>
           </section>
 
           <section>
@@ -270,18 +277,63 @@
 
             <p> Распределённый вариант </p>
             <pre><code class="elixir">
-            task = Task.Supervisor.async {KV.RouterTasks, :"foo@computer-name"}, fn ->
+            task = Task.Supervisor.async {CustomSupervisor, :"foo@computer-name"}, fn ->
               {:ok, node()}
             end
             </code></pre>
           </section>
 
           <section>
-            <p> Пример скрипта на async await (см. website_pipeline)</p>
+            <p> Пример скрипта на async await </p>
+
+            <pre><code class="elixir">
+              defmodule WebsitePipeline do
+                #  def map_titles(sites) do
+                #    sites
+                #    |> Enum.map(fn(url) ->
+                #      url |> get_body |> extract_title
+                #    end)
+                #  end
+
+                def map_titles(sites) do
+                  sites
+                  |> Enum.map(fn(url) ->
+                    Task.async(fn -> url |> get_body |> extract_title end)
+                  end)
+                  |> Enum.map(&Task.await/1)
+                end
+
+                defp get_body(url) do
+                  IO.inspect url
+                  HTTPotion.get(url).body
+                end
+
+                defp extract_title(html) do
+                  title_pattern = ~r"<title>([^<]*)</title>"
+                  Regex.run(title_pattern, html) |> Enum.at(1)
+                end
+              end
+
+              defmodule WebsitePipelineTest do
+                use ExUnit.Case
+
+                test "Mapping a pipeline of websites" do
+                  sites = ["http://example.org",
+                           "http://slashdot.org",
+                           "http://elixir-lang.org",
+                           "http://www.erlang.org"]
+                  expected_titles = ["Example Domain",
+                                     "Slashdot: News for nerds, stuff that matters",
+                                     "Elixir",
+                                     "Erlang Programming Language"]
+                  assert expected_titles == WebsitePipeline.map_titles(sites)
+                end
+              end
+            </code></pre>
           </section>
 
           <section>
-            <p> Управление in-memory состоянием (Agents) </p>
+            <p> Управление in-memory состоянием (простая абстракция вокруг стейта процесса - Agent) </p>
 
             <pre><code class="elixir">
             {:ok, agent} = Agent.start_link fn -> [] end
@@ -290,12 +342,12 @@
             Agent.stop(agent)
             </code></pre>
 
-            <p> Из коробки умеет атомарный get_and_update </p>
+            <p> Умеет get_and_update за одну операцию </p>
           </section>
 
           <section>
             <p> Управление in-memory состоянием (GenServers) </p>
-            <small>Если что-то посложнее, то правильнее использовать <a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html">GenServer</a> (обработка синхронных/асинхронных вызовов, перезагрузка кода и тд.)</small>
+            <small>Если что-то посложнее и похитрее, то правильнее использовать <a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html">GenServer</a></small>
 
           </section>
 
@@ -371,9 +423,14 @@
           </section>
 
           <section>
+            <p> Если необходимо можно использовать эрланговские библиотеки без особых проблем </p>
+
+            <a href="https://bitbucket.org/DavydenkovM/link_extractor/overview"> Пример простого сервиса c использованием пула воркеров на эрланге (poolboy)</a>
+          </section>
+
+          <section>
             <p> А ещё в elixir довольно хорошие возможности по метапрограммированию, созданию макросов и написанию DSL </p>
             <a href="http://elixir-lang.org/getting-started/meta/quote-and-unquote.html">Можно почитать в оффициальных доках</a>
-
           </section>
         </section>
 
@@ -381,8 +438,23 @@
           <h3>
             Phoenix overview
           </h3>
+        <section>
+          <br>
+          <p> Рассмотрим на реальном примере - <a href="https://github.com/bigardone/phoenix-trello">Phoenix-trello</a></p>
+          <h4> что хотелось бы отметить: </h4>
+          <ul>
+            <li> асинхронные тесты (есть даже интеграционные на хромдрайвере), фабрики, теги для тестов</li>
+            <li> миграции и сиды так знакомые rails разработчикам </li>
+            <li> brunch.io заменён на webpack </li>
+            <li> есть библиотека для авторизации через JWT, которая используется для аутентификации каналов, тсп сокетов и ендпоинтов</li>
+            <li> есть довольно приятный статический анализатор стиля кода аля рубокоп (mix credo)</li>
+            <li> довольно оправданный кейс для использования веб сокетов </li>
+          </ul>
 
-          <a href="https://github.com/bigardone/phoenix-trello">Рассмотрим на реальном примере</a>
+        </section>
+          <section>
+            <p> Другой пример - <a href="https://github.com/hexpm/hex_web">Hex Web</a>, API сервер для сайта package менеджера Hex.pm</p>
+          </section>
         </section>
 
         <section>
@@ -408,7 +480,7 @@
                 systemtap-sdt-dev \
                 autoconf 
 
-                To enable GUI Toolki Toolkitt:
+                To enable GUI Toolkit:
 
                 $ sudo aptitude install -y \
                 libwxbase2.8 \
