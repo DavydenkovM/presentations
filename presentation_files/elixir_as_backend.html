@@ -142,6 +142,104 @@
         <section>
           <section>
             <h3>
+              С чего начать
+            </h3>
+          </section>
+
+          <section>
+            <p>
+              Ставим зависимости
+            </p>
+              <pre><code class="bash">
+                $ sudo aptitude install -y \
+                build-essential \
+                libncurses5-dev \
+                openssl \
+                libssl-dev \
+                fop \
+                xsltproc \
+                unixodbc-dev \
+                systemtap-sdt-dev \
+                autoconf 
+
+                To enable GUI Toolkit:
+
+                $ sudo aptitude install -y \
+                libwxbase2.8 \
+                libwxgtk2.8-dev \
+                libqt4-opengl-dev
+              </code></pre>
+          </section>
+
+          <section style="text-align: left;">
+            <p>
+              Устанавливаем менеджер версий эрланга - KERL
+            </p>
+            <pre><code class="bash">
+                curl -O https://raw.githubusercontent.com/yrashk/kerl/master/kerl
+                chmod a+x kerl && sudo mv /usr/bin
+
+                KERL_CONFIGURE_OPTIONS=" \
+                --with-dynamic-trace=dtrace \
+                --enable-dynamic-ssl-lib \
+                --enable-dirty-schedulers \
+                --enable-smp-support \
+                --enable-sctp \
+                --enable-threads \
+                --enable-kernel-poll \
+                --enable-shared-zlib \
+                --disable-silent-rules \
+                --disable-debug \
+                --enable-hipe \
+                --enable-native-libs \
+                " \
+                kerl build 18.2.1 18.2.1
+                kerl install 18.2.1 18.2.1
+            </code></pre>
+          </section>
+
+          <section style="text-align: left;">
+            <p>
+              Устанавливаем менеджер версий эликсира - KIEX
+            </p>
+            <pre><code class="bash">
+                \curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+                kiex install 1.2.3
+                kiex default 1.2.3
+            </code></pre>
+          </section>
+
+          <section style="text-align: left;">
+            <p>
+              Добавляем в .bash_profile или .zprofile
+            </p>
+            <pre><code class="bash">
+            export PATH=$PATH:$HOME/.kerl/18.2.1/bin
+            export PATH=$PATH:$HOME/.kiex/bin
+            source "$HOME/.kiex/elixirs/elixir-1.2.3.env"
+
+            должно работать:
+            mix new project_name
+            </code></pre>
+          </section>
+
+
+          <section style="text-align: left;">
+            <p>
+              Далее ставим феникс и можно работать
+            </p>
+            <pre><code class="bash">
+            mix archive.install https://github.com/phoenixframework/archives/raw/master/phoenix_new.ez
+
+            должно работать:
+            mix phoenix.new project_name
+            </code></pre>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h3>
             Elixir overview
             </h3>
             <p> Главная фишка эликсира - это BEAM, виртуальная машина эрланга. Посмотрим чем может удивить эрланг! </p>
@@ -456,105 +554,6 @@
           <section>
             <p> Другой пример - <a href="https://github.com/hexpm/hex_web">Hex Web</a>, API сервер для сайта package менеджера Hex.pm</p>
           </section>
-        </section>
-
-        <section>
-          <section>
-            <h3>
-              С чего начать
-            </h3>
-          </section>
-
-          <section>
-            <p>
-              Ставим зависимости
-            </p>
-              <pre><code class="bash">
-                $ sudo aptitude install -y \
-                build-essential \
-                libncurses5-dev \
-                openssl \
-                libssl-dev \
-                fop \
-                xsltproc \
-                unixodbc-dev \
-                systemtap-sdt-dev \
-                autoconf 
-
-                To enable GUI Toolkit:
-
-                $ sudo aptitude install -y \
-                libwxbase2.8 \
-                libwxgtk2.8-dev \
-                libqt4-opengl-dev
-              </code></pre>
-          </section>
-
-          <section style="text-align: left;">
-            <p>
-              Устанавливаем менеджер версий эрланга - KERL
-            </p>
-            <pre><code class="bash">
-                curl -O https://raw.githubusercontent.com/yrashk/kerl/master/kerl
-                chmod a+x kerl && sudo mv /usr/bin
-
-                KERL_CONFIGURE_OPTIONS=" \
-                --with-dynamic-trace=dtrace \
-                --enable-dynamic-ssl-lib \
-                --enable-dirty-schedulers \
-                --enable-smp-support \
-                --enable-sctp \
-                --enable-threads \
-                --enable-kernel-poll \
-                --enable-shared-zlib \
-                --disable-silent-rules \
-                --disable-debug \
-                --enable-hipe \
-                --enable-native-libs \
-                " \
-                kerl build 18.2.1 18.2.1
-                kerl install 18.2.1 18.2.1
-            </code></pre>
-          </section>
-
-          <section style="text-align: left;">
-            <p>
-              Устанавливаем менеджер версий эликсира - KIEX
-            </p>
-            <pre><code class="bash">
-                \curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-                kiex install 1.2.3
-                kiex default 1.2.3
-            </code></pre>
-          </section>
-
-          <section style="text-align: left;">
-            <p>
-              Добавляем в .bash_profile или .zprofile
-            </p>
-            <pre><code class="bash">
-            export PATH=$PATH:$HOME/.kerl/18.2.1/bin
-            export PATH=$PATH:$HOME/.kiex/bin
-            source "$HOME/.kiex/elixirs/elixir-1.2.3.env"
-
-            должно работать:
-            mix new project_name
-            </code></pre>
-          </section>
-
-
-          <section style="text-align: left;">
-            <p>
-              Далее ставим феникс и можно работать
-            </p>
-            <pre><code class="bash">
-            mix archive.install https://github.com/phoenixframework/archives/raw/master/phoenix_new.ez
-
-            должно работать:
-            mix phoenix.new project_name
-            </code></pre>
-          </section>
-
         </section>
 
         <section>
