@@ -38,284 +38,58 @@
     <div class="reveal">
       <div class="slides">
         <section>
-          <h1>Разделение монолита</h1>
-          <h3>От проблем к решениям</h3>
+          <h1>Короткая презенташка</h1>
+          <h3>Foreign data wrappers в постгрес</h3>
           <p>
             <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
           </p>
         </section>
 
         <section>
-          <h2>
-          Фоксфорд Олимпиада
-          </h2>
-
-          <section>
-            <ul>
-              <li> один из rails engines монолитного приложения (main_app) </li>
-              <li> создавалась в сжатые сроки и решено было реализовать её как engine, чтобы использовать наследние main app и уложиться в deadline </li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>
-            Плюсы энджина
-            <br>
-            </h3>
-            <ul>
-              <li> реюз стилей, форм, компонент main_app, гео и пользовательсокй базы </li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>
-            Минусы энджина
-            </h3>
-
-            <br>
-            <ul>
-              <li> С другой стороны - в олимпиадe гораздо активнее идёт запись в базу нежели в main_app (read vs writes), и было бы логичнее держать этот domain в отдельной базе </li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>
-            Больше минусов
-            </h3>
-
-            <br>
-            <ul>
-              <li> Со временем таблицы и модели главного приложения засоряются olymp-specific данными (перемешивание контекстов) </li>
-              <li> Отсутствует независимый деплой </li>
-              <li> Зависимость от версий гемов и подходов главного приложения </li>
-              <li> Затягивается тестирование </li>
-            </ul>
-          </section>
+          <img width="1000" height="600" data-src="service_segregation/fdw.png" alt="arch1">
         </section>
 
         <section>
-          <h2>
-          Зависимости олимпиад
-          </h2>
-
-          <ul>
-            <li> Связи пользователя (с олимпиадой, с номером класса, со школой и геобазой) </li>
-            <li> Сертификаты и ачивки наследуются от main_app классов </li>
-            <li> Рейтинг с джойнами users и школы/геобазы </li>
-            <li> Расшаренная геобаза </li>
-            <li> Авторизация </li>
-            <li> Реюз вьюх и компонентов </li>
-          </ul>
+          <img width="1000" height="600" data-src="service_segregation/fdw_joins_schema.png" alt="arch1">
         </section>
 
         <section>
-          <h2>
-          Проблем много, но все они решаемы
-          </h2>
-        </section>
+          <pre><code class="sql">
+            CREATE DATABASE stoege_development2 WITH OWNER stoege;
+            \c stoege_development2
 
-        <section>
-          <p>
-          Реюз вьюх и компонентов
-          </p>
-          <section>
-            <a href="http://dreamingechoes.github.io/gem/ruby/rails/gemify-your-assets-in-less-than-10-minutes">Как завернуть ассеты в гем</a>
-            <pre><code class="js">
-              $(document).ready(function(){
-                // Set debug mode (for console logs)
-                RandomGiphyImageRails.debug = true;
+            CREATE TABLE foreign_olymp_user_olympiads(
+            id INT PRIMARY KEY NOT NULL,
+            user_id INT NOT NULL,
+            olympiad_ID INT NOT NULL,
+            state CHAR(50),
+            position INT,
+            solved_tasks_count INT,
+            created_at timestamp,
+            updated_at timestamp);
 
-                // Testing api key by default if you don't specify one
-                RandomGiphyImageRails.data.api_key = 'YOUR_GIPHY_API_KEY';
+            INSERT INTO foreign_olymp_user_olympiads VALUES (
+            2989, 224485, 32, 'finished', NUL);
 
-                // Class of the HTML element where you want to put the gif
-                RandomGiphyImageRails.data.element_class = 'giphyme';
+            CREATE EXTENSION postgres_fdw;
 
-                // Query or tag of your random gif
-                RandomGiphyImageRails.data.query = 'nintendo';
+            CREATE SERVER localhost
+            FOREIGN DATA WRAPPER postgres_fdw
+            OPTIONS(host 'localhost', port '5432', dbname 'stoege_development2');
 
-                // Executes the random gif thing
-                RandomGiphyImageRails.giphyme();
-              });
-            </code></pre>
+            CREATE USER MAPPING FOR public SERVER
+            localhost
+            OPTIONS (user 'stoege', password 'dsfafafaf');
 
-            <pre><code class="html">
-              body
-                .giphyme
-            </code></pre>
-          </section>
+            \c stoege_development
 
-          <section>
-            <a href="http://dreamingechoes.github.io/gem/ruby/rails/gemify-your-assets-in-less-than-10-minutes">Как завернуть ассеты в гем</a>
+            CREATE FOREIGN TABLE foreign_olymp_user_olympiads (id integer, user_id integer, olympiad_id integer, state char(50), position integer, solved_tasks_count integer, created_at timestamp, updated_at timestamp) SERVER localhost OPTIONS(table_name 'foreign_olymp_user_olympiads');
 
-            <pre><code class="bash">
-            $ bundle gem random_giphy_image_rails
+            \dt;
+            \det;
 
-            .
-            ├── Gemfile
-            ├── lib
-            │   ├── timeago
-            │   │   └── rails
-            │   │           └── version.rb
-            │   └── rails.rb
-            ├── LICENSE.txt
-            ├── Rakefile
-            ├── README.md
-            └── random_giphy_image_rails.gemspec
-            </code></pre>
-          </section>
-
-          <section>
-            <a href="http://dreamingechoes.github.io/gem/ruby/rails/gemify-your-assets-in-less-than-10-minutes">Как завернуть ассеты в гем</a>
-
-            <pre><code class="ruby">
-              require "random_giphy_image_rails/version"
-
-              module RandomGiphyImageRails
-                module Rails
-                  class Engine < ::Rails::Engine
-                  end
-                end
-              end
-            </code></pre>
-          </section>
-
-
-          <section>
-            <a href="http://dreamingechoes.github.io/gem/ruby/rails/gemify-your-assets-in-less-than-10-minutes">Как завернуть ассеты в гем</a>
-
-            <pre><code class="shell">
-              .
-              ├── Gemfile
-              ├── lib
-              │   ├── timeago
-              │   │   └── rails
-              │   │           └── version.rb
-              │   └── rails.rb
-              ├── LICENSE.txt
-              ├── Rakefile
-              ├── README.md
-              └── random_giphy_image_rails.gemspec
-              └── vendor
-                      └── assets
-                               ├── images
-                               ├── javascripts
-                               │             └── random_giphy_image_rails.js
-                               └── stylesheets
-            </code></pre>
-          </section>
-
-          <section>
-            <a href="http://dreamingechoes.github.io/gem/ruby/rails/gemify-your-assets-in-less-than-10-minutes">Как завернуть ассеты в гем</a>
-
-            <pre><code class="ruby">
-              $ rake release
-              gem 'random_giphy_image_rails'
-              bundle
-              //= require random_giphy_image_rails
-            </code></pre>
-          </section>
-
-          <section>
-            <p>
-            Используя такой подход в энджинах можно использовать сборщики JS модулей (browserify, webpack), писать компоненты на ES6, тестировать и тд. практически независимо от main_app
-            </p>
-
-            <p>
-            Когда будет сформировано достаточно гемов можно легко организовать библиотеку компонентов отдельным проектом
-            </p>
-          </section>
-
-          <section>
-            <p>
-            Альтернатива - организация фронтенд компонентов в виде npm модулей (см. гем browserify-rails)
-            </p>
-          </section>
-        </section>
-
-        <section>
-          <h2>
-          Авторизация
-          </h2>
-          <p>
-          Уже реализован сервис, нужно только запланировать его внедрение (на самом деле не самая срочная задача)
-          </p>
-        </section>
-
-        <section>
-          <h2>
-          Геобаза
-          </h2>
-          <p>
-          Кандидат на самостоятельный API (geobase.foxford.ru)
-          </p>
-        </section>
-
-        <section>
-          <section>
-            <img width="1000" height="600" data-src="service_segregation/olymp_joins.png" alt="arch1">
-          </section>
-          <section>
-            <h2>
-              Джойны
-            </h2>
-            <p>
-            В postgres существует несколько database decoupling подходов
-            </p>
-
-            <ul>
-              <li> Денормализация данных (не везде возможно и сложно в нашем случае) </li>
-              <li> Foreign Data Wrappers (Postgres MED) и MatView</li>
-              <li> Поиск MapReduce решений для Postgresql и MatView</li>
-            </ul>
-          </section>
-
-          <section>
-            <img width="1000" height="600" data-src="service_segregation/fdw.png" alt="arch1">
-          </section>
-
-          <section>
-            <img width="1000" height="600" data-src="service_segregation/fdw_joins_schema.png" alt="arch1">
-          </section>
-
-          <section>
-            <pre><code class="sql">
-              CREATE DATABASE stoege_development2 WITH OWNER stoege;
-              \c stoege_development2
-
-              CREATE TABLE foreign_olymp_user_olympiads(
-              id INT PRIMARY KEY NOT NULL,
-              user_id INT NOT NULL,
-              olympiad_ID INT NOT NULL,
-              state CHAR(50),
-              position INT,
-              solved_tasks_count INT,
-              created_at timestamp,
-              updated_at timestamp);
-
-              INSERT INTO foreign_olymp_user_olympiads VALUES (
-              2989, 224485, 32, 'finished', NUL);
-
-              CREATE EXTENSION postgres_fdw;
-
-              CREATE SERVER localhost
-              FOREIGN DATA WRAPPER postgres_fdw
-              OPTIONS(host 'localhost', port '5432', dbname 'stoege_development2');
-
-              CREATE USER MAPPING FOR public SERVER
-              localhost
-              OPTIONS (user 'stoege', password 'dsfafafaf');
-
-              \c stoege_development
-
-              CREATE FOREIGN TABLE foreign_olymp_user_olympiads (id integer, user_id integer, olympiad_id integer, state char(50), position integer, solved_tasks_count integer, created_at timestamp, updated_at timestamp) SERVER localhost OPTIONS(table_name 'foreign_olymp_user_olympiads');
-
-              \dt;
-              \det;
-
-              SELECT * FROM users INNER JOIN foreign_olymp_user_olympiads ON users.id = foreign_olymp_user_olympiads.user_id;
-            </code></pre>
-          </section>
+            SELECT * FROM users INNER JOIN foreign_olymp_user_olympiads ON users.id = foreign_olymp_user_olympiads.user_id;
+          </code></pre>
         </section>
 
         <section style="text-align: left;">

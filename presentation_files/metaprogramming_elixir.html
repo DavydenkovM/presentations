@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Metaprogramming elixir</title>
+    <meta name="description" content="Elixir as backend">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../css/reveal.css">
+    <link rel="stylesheet" href="../css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../css/print/pdf.css' : '../css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+
+  <body>
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h2>Говорим о новом</h2>
+          <h4>Эликсир как язык для бекенда микросервиса или веб приложения</h4>
+          <p>
+            <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
+          </p>
+        </section>
+
+        <section>
+            <h2>
+              Содержание
+            </h2>
+
+            <ul>
+              <li> Что мы ждём от современного веб фреймворка и платформы для бекенда </li>
+              <li> Рельсы, феникс и конкуренты </li>
+              <li> С чего начать </li>
+              <li> Знакомимся с эликсиром, демки </li>
+              <li> Обзор phoenix приложения </li>
+              <li> Ссылочки </li>
+            </ul>
+        </section>
+
+        <section>
+          <section>
+            <h3>
+            Ожидания от платформы / рантайма
+            </h3>
+
+            <ul>
+              <li> Масштабируемость из коробки (при увеличении нагрузок вычисления могут быть реорганизованы без головной боли) </li>
+              <li> Равномерное распределение вычислений по процессорным ядрам </li>
+              <li> Прозрачность и простота написания асинхронного кода </li>
+              <li> Продуманная модель обработки ошибок (и восстановления после сбоев) </li>
+              <li> Достаточно высокий уровень языка, чтобы не отвлекаться на низкоуровневые вещи </li>
+              <li> Поддержка метапрограммирования и всякие синтаксические удобности </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>
+            Ожидания от веб-фреймворка
+            </h3>
+
+            <ul>
+              <li> Возможность работать с IO в неблокирующем стиле </li>
+              <li> RESTful по умолчанию </li>
+              <li> Прозрачный механизм сборки и управления ассетами </li>
+              <li> Удобная прослойка для работы с БД </li>
+              <li> Хороший тестовый фреймворк с возможностью запуска параллельных тестов </li>
+              <li> Наличие удобных хелперов (декораторы, локали, сервисы) </li>
+              <li> Нативная поддержка модных штук типа Websockets, SSE, HTTP2 </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>
+            Дружелюбность к разработчику
+            </h3>
+            <ul>
+              <li> Удобные инструменты работы с платформой (REPL, билд тулы, таск раннеры, дебагеры и тд.) </li>
+              <li> Быстрая скорость разработки </li>
+              <li> Приятный синтаксис </li>
+              <li> Наличие отзывчивого комьюнити, third-party библиотек, хорошая документация </li>
+              <li> Возможности дебажить на стейджинг серверах </li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <p> К сожалению не все языки и фреймворки соответствуют современным требованиям </p>
+          </section>
+
+          <section>
+            <p> Иногда бывает так: </p>
+            <img width="900" height="600" data-src="elixir_as_backend/ruby-cpu1.gif" alt="arch1">
+          </section>
+
+          <section>
+            <p> Или так: </p>
+            <img width="900" height="600" data-src="elixir_as_backend/ruby-cpu2.jpg" alt="arch1">
+          </section>
+        </section>
+
+
+        <section>
+          <section>
+            <h2>
+            Рельсы, феникс и конкуренты
+            </h2>
+
+            <ul>
+              <li> node.js </li>
+              <li> Go </li>
+              <li> ASP.NET </li>
+              <li> JAVA фреймворки (Scala play) </li>
+              <li> Разное из мира ФП (uncommon web на Clojure, Haskell, OCaml)</li>
+              <li> Python, Perl, PHP фреймворки </li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h3>
+              С чего начать
+            </h3>
+          </section>
+
+          <section>
+            <p>
+              Ставим зависимости
+            </p>
+              <pre><code class="bash">
+                $ sudo aptitude install -y \
+                build-essential \
+                libncurses5-dev \
+                openssl \
+                libssl-dev \
+                fop \
+                xsltproc \
+                unixodbc-dev \
+                systemtap-sdt-dev \
+                autoconf 
+
+                To enable GUI Toolkit:
+
+                $ sudo aptitude install -y \
+                libwxbase2.8 \
+                libwxgtk2.8-dev \
+                libqt4-opengl-dev
+              </code></pre>
+          </section>
+
+          <section style="text-align: left;">
+            <p>
+              Устанавливаем менеджер версий эрланга - KERL
+            </p>
+            <pre><code class="bash">
+                curl -O https://raw.githubusercontent.com/yrashk/kerl/master/kerl
+                chmod a+x kerl && sudo mv /usr/bin
+
+                KERL_CONFIGURE_OPTIONS=" \
+                --with-dynamic-trace=dtrace \
+                --enable-dynamic-ssl-lib \
+                --enable-dirty-schedulers \
+                --enable-smp-support \
+                --enable-sctp \
+                --enable-threads \
+                --enable-kernel-poll \
+                --enable-shared-zlib \
+                --disable-silent-rules \
+                --disable-debug \
+                --enable-hipe \
+                --enable-native-libs \
+                " \
+                kerl build 18.2.1 18.2.1
+                kerl install 18.2.1 18.2.1
+            </code></pre>
+          </section>
+
+          <section style="text-align: left;">
+            <p>
+              Устанавливаем менеджер версий эликсира - KIEX
+            </p>
+            <pre><code class="bash">
+                \curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+                kiex install 1.2.3
+                kiex default 1.2.3
+            </code></pre>
+          </section>
+
+          <section style="text-align: left;">
+            <p>
+              Добавляем в .bash_profile или .zprofile
+            </p>
+            <pre><code class="bash">
+            export PATH=$PATH:$HOME/.kerl/18.2.1/bin
+            export PATH=$PATH:$HOME/.kiex/bin
+            source "$HOME/.kiex/elixirs/elixir-1.2.3.env"
+
+            должно работать:
+            mix new project_name
+            </code></pre>
+          </section>
+
+
+          <section style="text-align: left;">
+            <p>
+              Далее ставим феникс и можно работать
+            </p>
+            <pre><code class="bash">
+            mix archive.install https://github.com/phoenixframework/archives/raw/master/phoenix_new.ez
+
+            должно работать:
+            mix phoenix.new project_name
+            </code></pre>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h3>
+            Elixir overview
+            </h3>
+            <p> Главная фишка эликсира - это BEAM, виртуальная машина эрланга. Посмотрим чем может удивить эрланг! </p>
+          </section>
+          <section>
+            <p> Простейшие функции </p>
+
+            <pre><code class="elixir">
+            hello_func = fn ->
+              IO.puts "hello"
+            end
+            </code></pre>
+          </section>
+
+          <section>
+            <p> Порождение процесса </p>
+
+            <pre><code class="elixir">
+            spawn(hello_func)
+            </code></pre>
+          </section>
+
+          <section>
+            <p> Порождение процесса, ожидающего сообщениe </p>
+
+            <pre><code class="elixir">
+            hello_func = fn ->
+              IO.puts "hello"
+              receive do
+                :goodbye ->
+                  IO.puts "goodbye"
+                _ ->
+                  IO.puts "unknown message"
+              end
+            end
+
+            spawn(hello_func)
+            </code></pre>
+
+            <p> Процесс завершается с exit(normal) и второй раз не отреагирует на наше сообщение </p>
+          </section>
+
+          <section>
+            <p> Функция в модуле (c хвостовой рекурсией)</p>
+
+            <pre><code class="elixir">
+            defmodule Hello do
+              def hello_func do
+                IO.puts "hello"
+                receive do
+                  :goodbye ->
+                    IO.puts "goodbye"
+                    hello_func
+                  _ ->
+                    IO.puts "unknown message"
+                    hello_func
+                end
+              end
+            end
+
+            pid = spawn(Hello, :hello_func, [])
+            send(pid, :goodbye)
+            send(pid, :foobar)
+            </code></pre>
+          </section>
+
+          <section>
+            <p> Функция в модуле передающая стейт между вызовами (c хвостовой рекурсией) </p>
+
+            <pre><code class="elixir">
+            defmodule Hello do
+              def hello_func(counter) do
+                IO.puts "hello"
+                receive do
+                  :goodbye ->
+                    IO.puts "You've said goodbye #{counter} times"
+                    new_counter = counter + 1
+                    hello_func(new_counter)
+                  _ ->
+                    IO.puts "unknown message"
+                    hello_func(counter)
+                end
+              end
+            end
+
+            pid = spawn(Hello, :hello_func, [])
+            send(pid, :goodbye)
+            send(pid, :foobar)
+            </code></pre>
+          </section>
+
+          <section>
+            <p> Интроспекция в эрланге / эликсире </p>
+
+            <pre><code class="elixir">
+            :observer.start
+            </code></pre>
+
+            <p> А вообще тема серьёзная и требует изучения (есть разные интсрументы как в эрланге, так и в эликсире) <p>
+
+            <p> Можно почитать <a href="http://fprog.ru/2010/issue5/maxim-treskin-erlang-introspection/">тут</a> и <a href="http://levgem.livejournal.com/463349.html">тут</a> для ознакомления </p>
+
+          </section>
+
+          <section>
+            <p> Составление пифагоровых троек через генераторы списков (List Comprehensions) </p>
+
+            <pre><code class="elixir">
+              defmodule Triple do
+                def pythagorean(n) when n > 0 do
+                  for a <- 1..n,
+                    b <- 1..n,
+                    c <- 1..n,
+                    a + b + c <= n,
+                    a*a + b*b == c*c,
+                    do: {a, b, c}
+                end
+              end
+
+              Triple.pythagorean(48)
+            </code></pre>
+
+            <p> LC используется в фениксовых темплейтах для работы с коллекциями </p>
+          </section>
+
+          <section>
+            <p> Удобности для асинхронного кода (промисы)</p>
+
+            <pre><code class="elixir">
+            task = Task.async(fn -> 1 + 2 + 3 end)
+            res  = 4 + 5
+            res + Task.await(task)
+            </code></pre>
+
+            <p> Распределённый вариант </p>
+            <pre><code class="elixir">
+            task = Task.Supervisor.async {CustomSupervisor, :"foo@computer-name"}, fn ->
+              {:ok, node()}
+            end
+            </code></pre>
+          </section>
+
+          <section>
+            <p> Пример скрипта на async await </p>
+
+            <pre><code class="elixir">
+              defmodule WebsitePipeline do
+                #  def map_titles(sites) do
+                #    sites
+                #    |> Enum.map(fn(url) ->
+                #      url |> get_body |> extract_title
+                #    end)
+                #  end
+
+                def map_titles(sites) do
+                  sites
+                  |> Enum.map(fn(url) ->
+                    Task.async(fn -> url |> get_body |> extract_title end)
+                  end)
+                  |> Enum.map(&Task.await/1)
+                end
+
+                defp get_body(url) do
+                  IO.inspect url
+                  HTTPotion.get(url).body
+                end
+
+                defp extract_title(html) do
+                  title_pattern = ~r"<title>([^<]*)</title>"
+                  Regex.run(title_pattern, html) |> Enum.at(1)
+                end
+              end
+
+              defmodule WebsitePipelineTest do
+                use ExUnit.Case
+
+                test "Mapping a pipeline of websites" do
+                  sites = ["http://example.org",
+                           "http://slashdot.org",
+                           "http://elixir-lang.org",
+                           "http://www.erlang.org"]
+                  expected_titles = ["Example Domain",
+                                     "Slashdot: News for nerds, stuff that matters",
+                                     "Elixir",
+                                     "Erlang Programming Language"]
+                  assert expected_titles == WebsitePipeline.map_titles(sites)
+                end
+              end
+            </code></pre>
+          </section>
+
+          <section>
+            <p> Управление in-memory состоянием (простая абстракция вокруг стейта процесса - Agent) </p>
+
+            <pre><code class="elixir">
+            {:ok, agent} = Agent.start_link fn -> [] end
+            Agent.update(agent, fn list -> ["eggs"|list] end)
+            Agent.get(agent, fn list -> list end)
+            Agent.stop(agent)
+            </code></pre>
+
+            <p> Умеет get_and_update за одну операцию </p>
+          </section>
+
+          <section>
+            <p> Управление in-memory состоянием (GenServers) </p>
+            <small>Если что-то посложнее и похитрее, то правильнее использовать <a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html">GenServer</a></small>
+
+          </section>
+
+          <section>
+            <p> Любимая программа Джо Армстронга </p>
+
+            <pre><code class="elixir">
+            # shell 1
+            iex --name "foo@192.168.1.69"
+            :erlang.set_cookie(node(), :foobar)
+            :erlang.register(:shell, self())
+
+            returned_value = receive do
+              {:become, some_fn} ->
+                some_fn.()
+            end
+
+            #shell 2
+            iex --name "bar@192.168.1.60"
+            erlang.set_cookie(node(), :foobar)
+
+            echo_server = fn ->
+              receive do
+                {from, value} ->
+                  send(from, value)
+              end
+            end
+
+            foo = {:shell, :"foo@192.168.1.69"}
+            send(foo, {:become, echo_server})
+            send(foo, {self, "hey there"})
+            flush()
+            </code></pre>
+          </section>
+
+          <section>
+            <p> Протоколы - вариант реализации полиморфизма в эликсире </p>
+
+            <pre><code class="elixir">
+            defprotocol Odd do
+              @doc "Returns true if data is considered odd"
+
+              def odd?(data)
+            end
+
+            defimpl Odd, for: Integer do
+              require Integer
+
+              def odd?(data) do
+                data
+                |> Integer.is_odd
+              end
+            end
+
+            defimpl Odd, for: Float do
+              def odd?(data) do
+                Odd.odd?(round(Float.floor(data)))
+              end
+            end
+
+            defimpl Odd, for: List do
+              def odd?(data) do
+                Odd.odd?(Enum.count(data))
+              end
+            end
+
+            Odd.odd?(2.1)
+            Odd.odd?([1])
+            Odd.odd?(%Animal{})
+            </code></pre>
+
+            <p> Активно используется в phoenix для сериализации-десериализации </p>
+          </section>
+
+          <section>
+            <p> Если необходимо можно использовать эрланговские библиотеки без особых проблем </p>
+
+            <a href="https://bitbucket.org/DavydenkovM/link_extractor/overview"> Пример простого сервиса c использованием пула воркеров на эрланге (poolboy)</a>
+          </section>
+
+          <section>
+            <p> А ещё в elixir довольно хорошие возможности по метапрограммированию, созданию макросов и написанию DSL </p>
+            <a href="http://elixir-lang.org/getting-started/meta/quote-and-unquote.html">Можно почитать в оффициальных доках</a>
+          </section>
+        </section>
+
+        <section>
+          <h3>
+            Phoenix overview
+          </h3>
+        <section>
+          <br>
+          <p> Рассмотрим на реальном примере - <a href="https://github.com/bigardone/phoenix-trello">Phoenix-trello</a></p>
+          <h4> что хотелось бы отметить: </h4>
+          <ul>
+            <li> асинхронные тесты (есть даже интеграционные на хромдрайвере), фабрики, теги для тестов</li>
+            <li> миграции и сиды так знакомые rails разработчикам </li>
+            <li> brunch.io заменён на webpack </li>
+            <li> есть библиотека для авторизации через JWT, которая используется для аутентификации каналов, тсп сокетов и ендпоинтов</li>
+            <li> есть довольно приятный статический анализатор стиля кода аля рубокоп (mix credo)</li>
+            <li> довольно оправданный кейс для использования веб сокетов </li>
+          </ul>
+
+        </section>
+          <section>
+            <p> Другой пример - <a href="https://github.com/hexpm/hex_web">Hex Web</a>, API сервер для сайта package менеджера Hex.pm</p>
+          </section>
+        </section>
+
+        <section>
+          <h3>
+            Ссылочки
+          </h3>
+            <ul>
+              <li> <a href="http://elixir-lang.org/learning.html">Обучающие ресурсы (книжечки, скринкасты, видео)</a> </li>
+              <li> <a href="http://www.slideshare.net/BrooklynZelenka/elixir-and-phoenix-for-rubyists">Эликсир для рубистов</a> </li>
+              <li> <a href="https://github.com/h4cc/awesome-elixir">Awesome elixir </a> </li>
+            </ul>
+        </section>
+
+        <section style="text-align: left;">
+          <h1>THE END</h1>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="../lib/js/head.min.js"></script>
+    <script src="../js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '../plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../plugin/zoom-js/zoom.js', async: true },
+          { src: '../plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>

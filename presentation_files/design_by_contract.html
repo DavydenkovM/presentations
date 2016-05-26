@@ -1,0 +1,334 @@
+
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Design by contract</title>
+    <meta name="description" content="Elixir as backend">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../css/reveal.css">
+    <link rel="stylesheet" href="../css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../css/print/pdf.css' : '../css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+
+  <body>
+    <div class="reveal">
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h2>Говорим о новом</h2>
+          <h4>Design by contract</h4>
+          <h4>Обзор гема <a href="https://github.com/egonSchiele/contracts.ruby">contracts.ruby</a></h4>
+          <p>
+            <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
+          </p>
+        </section>
+
+        <section>
+          <p><b>
+              Основная идея, история и требования к языку
+          </b></p>
+
+            <ul>
+
+              <li> Контракты предусматривают взаимные обязательства и преимущества (отношения клиент - поставщик). </li>
+              <li> Из языка Eiffel (Бертран Мейер). На уровне языка поддерживается в Clojure, Eiffell и других менее известных языках. В большинстве языков поддержка с помощью сторонних библиотек. </li>
+              <li> ЯП должен поддерживать наследование, динамическое связывание, обработку исключений и автоматическое документирования кода. </li>
+
+            </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Что входит в контракт метода или функции
+          </b></p>
+
+          <ul>
+            <li> Обязательства (предусловия) </li>
+            <li> Свойства (постусловия). </li>
+            <li> Инварианты (валидации). State объекта, который должен оставаться консистентным до и после вызова метода/функции. </li>
+          </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Контракты в Ruby
+          </b></p>
+
+          <pre><code class="ruby">
+            gem install contracts # inspired by contracts.coffee
+            require 'contracts' # в application.rb
+            include Contracts
+
+            Contract Num => Num
+            def double(x)
+              x * 2
+            end
+            puts double("oops")
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Пример нарушения контракта
+          </b></p>
+
+          <pre><code class="ruby">
+          ./contracts.rb:34:in 'failure_callback': Contract violation: (RuntimeError)
+              Expected: Contracts::Num,
+              Actual: "oops"
+              Value guarded in: Object::double
+              With Contract: Contracts::Num, Contracts::Num
+              At: main.rb:6
+              ...stack trace...
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Структура failure_message
+          </b></p>
+
+          <pre><code class="ruby">
+          {
+            arg: the argument to the method,
+            contract: the contract that got violated,
+            class: the method's class,
+            method: the method,
+            contracts: the contract object
+          }
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Встроенные контракты
+          </b></p>
+
+          <p>
+          contracts.ruby предусматривает большое количество встроенных контрактов:
+          </p>
+
+          <pre><code class="ruby">
+          Num, Pos, Neg, Nat, Bool, Any, None, 
+          Or, Xor, Not, 
+          ArrayOf, HashOf, Maybe, 
+          RespondTo[:password, :credit_card], Send[:valid?], Exactly[Numeric]
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Создание собственных контрактов
+          </b></p>
+
+          <p>
+          Контракты очень просто создать. Контрактом может быть:
+          </p>
+
+          <ul>
+            <li> Название класса (String или Fixnum) </li>
+            <li> Константа (nil или 1) </li>
+            <li> Proc, принимающий значение и возвращающий true/false </li>
+            <li> Класс, имеющий класс метод valid?  </li>
+            <li> Объект, имеющий метод valid? </li>
+          </ul>
+        </section>
+
+        <section>
+          <p><b>
+          Кастомизации
+          </b></p>
+
+          <p>
+          Переписывание failure_callback
+          </p>
+
+          <pre><code class="ruby">
+          # initializer
+          Contract.override_failure_callback do |data|
+            Rails.logger.error format(data)
+            Airbrake.notify_or_ignore(error_from_data(data))
+          end
+          </pre></code>
+
+          <p>
+          Переписывание сообщений об ошибках
+          </p>
+
+          <pre><code class="ruby">
+            def Num.to_s
+              "a number please"
+            end
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+          Pattern matching
+          </b></p>
+
+          <p>
+          Wihtout
+          </p>
+
+          <pre><code class="ruby">
+          Contract Num => Num
+          def fact x
+            if x == 1
+              x
+            else
+              x * fact(x - 1)
+            end
+          end
+          </pre></code>
+
+          <p>
+          With
+          </p>
+
+          <pre><code class="ruby">
+          Contract 1 => 1
+          def fact x
+            x
+          end
+
+          Contract Num => Num
+          def fact x
+            x * fact(x - 1)
+          end
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+          Pattern matching 2
+          </b></p>
+
+          <pre><code class="ruby">
+            Contract lambda{|n| n < 12 } => Ticket
+            def get_ticket(age)
+              ChildTicket.new(age: age)
+            end
+
+            Contract lambda{|n| n >= 12 } => Ticket
+            def get_ticket(age)
+              AdultTicket.new(age: age)
+            end
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Контракты в модулях
+          </b></p>
+
+          <pre><code class="ruby">
+            module M
+              include Contracts
+              include Contracts::Modules
+
+              Contract String => String
+              def self.parse
+                # do some hard parsing
+              end
+            end
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Инварианты
+          </b></p>
+
+          <pre><code class="ruby">
+            include Contracts::Invariants
+
+            Invariant(:day) { 1 <= day && day <= 31 }
+            Invariant(:month) { 1 <= month && month <= 12 }
+
+            Contract None => Fixnum
+            def silly_next_day!
+              self.day += 1
+            end
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Производительность
+          </b></p>
+
+          <p>
+          Заявлено, что контракты имееют минимальный slowdown по производительности.
+          Бенчмарки метода, возвращающего сумму двух чисел (1_000_000 раз):
+          </p>
+
+          <pre><code class="ruby">
+                                  total        real
+          testing read            2.530000 (  2.521314)
+          testing contracts read  2.900000 (  2.903721)
+          </pre></code>
+        </section>
+
+
+        <section style="text-align: left;">
+          <p>
+          По-моему, этот гем - хорошое начинание и может быть применён по ситуации. Правда придётся чаще пользоваться бенчмарками, т.к. 100% доверия гему нет
+          </p>
+
+          <a href="http://github.com/DavydenkovM/rails_and_contracts">Пример реализации контрактов в rails приложении</a>
+        </section>
+      </div>
+    </div>
+
+    <script src="../lib/js/head.min.js"></script>
+    <script src="../js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '../plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../plugin/zoom-js/zoom.js', async: true },
+          { src: '../plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>

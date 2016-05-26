@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Elixir as backend</title>
+    <meta name="description" content="Elixir as backend">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../css/reveal.css">
+    <link rel="stylesheet" href="../css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../css/print/pdf.css' : '../css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+
+  <body>
+    <div class="reveal">
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h2>Говорим о новом</h2>
+          <h4>Data Context Interaction approach</h4>
+          <h4>Обзор книги <a href="http://clean-ruby.com">Clean Ruby</a></h4>
+          <p>
+            <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
+          </p>
+        </section>
+
+        <section>
+          <p><b>
+              Предпосылки
+          </b></p>
+
+            <ul>
+              <li> Парадигма MVC не предусматривает где живёт бизнес логика. Из-за этого бизнес логика имеет тенденцию размазываться по приложению.</li>
+              <li> Модели в классическом варианте нарушают принципы SRP и open/closed. </li>
+              <li> Не всегда ясно как одни методы взаимодействуют с другими, т.к. 'взаимодействие' между методами не first-class citizen в коде. </li>
+              <li> Тесты помогают понять, что происходит в приложении, однако они оторваны от кода и могут не отражать действительного функционирования программы </li>
+            </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Цели
+          </b></p>
+
+          <ul>
+            <li> Инкапсулировать бизнес логику и отделить её от кода фреймворка (framework-agnostic code) </li>
+            <li> Сократить время понимания кода и упростить/ускорить процесс тестирования </li>
+            <li> Быстро понимать какие роли(actors) вовлечены в тот или иной контекст </li>
+          </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Основные положения Data Context Interaction подхода
+          </b></p>
+
+          <ul>
+            <li> Разделять стейт и поведение. <ol><small>Объект может заниматься ИЛИ хранением стейта (в рельсах это связано с валидациями, выборками из базы) </small></ol><ol><small>ИЛИ управлять поведением (реализация алгоритмов и бизнес логики) </small></ol></li>
+            <li> Введение в приложение объектов типа объект-контекст </li>
+            <li> Представление бизнес-логики в виде сценариев </li>
+            <li> Использование Convention over Configuration принципов для организации бизнес-логики в коде </li>
+
+          </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Назначение контекст-объектов
+          </b></p>
+          <ul>
+            <li> Контекстные валидации </li>
+            <li> Назначение ролей экторам </li>
+            <li> Хранение алгоритмов, которые вызываются различными триггерами </li>
+            <li> Взаимодействие с другими контекстами (методами экторов) </li>
+          </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Структура контекст-объекта
+          </b></p>
+
+          <pre><code class="ruby">
+          Class MoneyTransfering
+            # Блок инициализации c назначением ролей, 
+            # Создание карты ролей(хэш ролей), 
+            # Аксессоры, делегирование, валидации
+            # Блок триггеров
+            # Приватные методы
+            # Модули/классы экторов
+          end
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Продвинутое делегирование и гем casting
+          </b></p>
+          <p>
+            Гем использует возможность взять метод из модуля и забиндить его к любому объекту.
+            Преимущество над object.extend(Module) в том, что бинд можно отменить с помощью unbind
+          </p>
+
+          <pre><code class="ruby">
+            module Foo
+              #...
+            end
+
+            method = Foo.instance_method(:bar)
+            p method.bind(Object.new).call
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Разруливание ролей через гем surrounded
+          </b></p>
+          <p>
+            Гем использует возможность взять метод из модуля и забиндить его к любому объекту.
+            Преимущество над object.extend(Module) в том, что бинд можно отменить с помощью unbind
+          </p>
+
+          <pre><code class="ruby">
+          module Surrounded
+            def method_missing(method_name, *args, &block)
+              if @context && @context.roles_include?(method_name)
+                @context.role(method_name)
+              else
+                super
+              end
+            end
+          end
+
+          class User
+            include Surrounded
+          end
+          </pre></code>
+        </section>
+        <section style="text-align: left;">
+          <p>
+            Немного поработав с этими гемами я пришёл к выводу, что текущая реализация DCI не для продакшна, да и сам подход не без изъянов. Слишком большой оверхед и пляски с ролями. Есть потери производительности. В руби достаточно сложно наметапрограммировать так, чтобы подход было удобно использовать не потеряв при этом производительности в рантайме. Стоит посмотреть для расширения кругозора, но не более.
+          </p>
+
+          <a href="http://github.com/DavydenkovM/rails_contexts">Пример реализации контекстов в rails приложении</a>
+        </section>
+
+        <section style="text-align: left;">
+          <h4>Правда, не пользуйтесь этим в продакшне</h4>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="../lib/js/head.min.js"></script>
+    <script src="../js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '../plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../plugin/zoom-js/zoom.js', async: true },
+          { src: '../plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
