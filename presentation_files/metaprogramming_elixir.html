@@ -37,7 +37,7 @@
       <div class="slides">
         <section>
           <h2>Говорим о новом</h2>
-          <h4>Эликсир как язык для бекенда микросервиса или веб приложения</h4>
+          <h4>Метапрограммирование в эликсире. По книге Криса МакКорда</h4>
           <p>
             <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
           </p>
@@ -47,512 +47,352 @@
             <h2>
               Содержание
             </h2>
+          <br>
 
             <ul>
-              <li> Что мы ждём от современного веб фреймворка и платформы для бекенда </li>
-              <li> Рельсы, феникс и конкуренты </li>
-              <li> С чего начать </li>
-              <li> Знакомимся с эликсиром, демки </li>
-              <li> Обзор phoenix приложения </li>
+              <li> Зачем нужно, как реализовано </li>
+              <li> Танцы вокруг AST </li>
+              <li> Доступ к AST </li>
+              <li> Макросы </li>
+              <li> Тестовый фреймворк в 60 строк кода </li>
+              <li> I18n в 65 строк кода (с compile-time оптимизацией)</li>
+              <li> Генерация кода из внешних источников </li>
+              <li> Создание DSL, о чём спросить себя? </li>
+              <li> Тестирование библиотек </li>
+              <li> Когда стоит применять а когда нет</li>
               <li> Ссылочки </li>
             </ul>
         </section>
 
         <section>
-          <section>
-            <h3>
-            Ожидания от платформы / рантайма
-            </h3>
-
-            <ul>
-              <li> Масштабируемость из коробки (при увеличении нагрузок вычисления могут быть реорганизованы без головной боли) </li>
-              <li> Равномерное распределение вычислений по процессорным ядрам </li>
-              <li> Прозрачность и простота написания асинхронного кода </li>
-              <li> Продуманная модель обработки ошибок (и восстановления после сбоев) </li>
-              <li> Достаточно высокий уровень языка, чтобы не отвлекаться на низкоуровневые вещи </li>
-              <li> Поддержка метапрограммирования и всякие синтаксические удобности </li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>
-            Ожидания от веб-фреймворка
-            </h3>
-
-            <ul>
-              <li> Возможность работать с IO в неблокирующем стиле </li>
-              <li> RESTful по умолчанию </li>
-              <li> Прозрачный механизм сборки и управления ассетами </li>
-              <li> Удобная прослойка для работы с БД </li>
-              <li> Хороший тестовый фреймворк с возможностью запуска параллельных тестов </li>
-              <li> Наличие удобных хелперов (декораторы, локали, сервисы) </li>
-              <li> Нативная поддержка модных штук типа Websockets, SSE, HTTP2 </li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>
-            Дружелюбность к разработчику
-            </h3>
-            <ul>
-              <li> Удобные инструменты работы с платформой (REPL, билд тулы, таск раннеры, дебагеры и тд.) </li>
-              <li> Быстрая скорость разработки </li>
-              <li> Приятный синтаксис </li>
-              <li> Наличие отзывчивого комьюнити, third-party библиотек, хорошая документация </li>
-              <li> Возможности дебажить на стейджинг серверах </li>
-            </ul>
-          </section>
-        </section>
-
-        <section>
-          <section>
-            <p> К сожалению не все языки и фреймворки соответствуют современным требованиям </p>
-          </section>
-
-          <section>
-            <p> Иногда бывает так: </p>
-            <img width="900" height="600" data-src="elixir_as_backend/ruby-cpu1.gif" alt="arch1">
-          </section>
-
-          <section>
-            <p> Или так: </p>
-            <img width="900" height="600" data-src="elixir_as_backend/ruby-cpu2.jpg" alt="arch1">
-          </section>
-        </section>
-
-
-        <section>
-          <section>
-            <h2>
-            Рельсы, феникс и конкуренты
-            </h2>
-
-            <ul>
-              <li> node.js </li>
-              <li> Go </li>
-              <li> ASP.NET </li>
-              <li> JAVA фреймворки (Scala play) </li>
-              <li> Разное из мира ФП (uncommon web на Clojure, Haskell, OCaml)</li>
-              <li> Python, Perl, PHP фреймворки </li>
-            </ul>
-          </section>
-        </section>
-
-        <section>
-          <section>
-            <h3>
-              С чего начать
-            </h3>
-          </section>
-
-          <section>
-            <p>
-              Ставим зависимости
-            </p>
-              <pre><code class="bash">
-                $ sudo aptitude install -y \
-                build-essential \
-                libncurses5-dev \
-                openssl \
-                libssl-dev \
-                fop \
-                xsltproc \
-                unixodbc-dev \
-                systemtap-sdt-dev \
-                autoconf 
-
-                To enable GUI Toolkit:
-
-                $ sudo aptitude install -y \
-                libwxbase2.8 \
-                libwxgtk2.8-dev \
-                libqt4-opengl-dev
-              </code></pre>
-          </section>
-
-          <section style="text-align: left;">
-            <p>
-              Устанавливаем менеджер версий эрланга - KERL
-            </p>
-            <pre><code class="bash">
-                curl -O https://raw.githubusercontent.com/yrashk/kerl/master/kerl
-                chmod a+x kerl && sudo mv /usr/bin
-
-                KERL_CONFIGURE_OPTIONS=" \
-                --with-dynamic-trace=dtrace \
-                --enable-dynamic-ssl-lib \
-                --enable-dirty-schedulers \
-                --enable-smp-support \
-                --enable-sctp \
-                --enable-threads \
-                --enable-kernel-poll \
-                --enable-shared-zlib \
-                --disable-silent-rules \
-                --disable-debug \
-                --enable-hipe \
-                --enable-native-libs \
-                " \
-                kerl build 18.2.1 18.2.1
-                kerl install 18.2.1 18.2.1
-            </code></pre>
-          </section>
-
-          <section style="text-align: left;">
-            <p>
-              Устанавливаем менеджер версий эликсира - KIEX
-            </p>
-            <pre><code class="bash">
-                \curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-                kiex install 1.2.3
-                kiex default 1.2.3
-            </code></pre>
-          </section>
-
-          <section style="text-align: left;">
-            <p>
-              Добавляем в .bash_profile или .zprofile
-            </p>
-            <pre><code class="bash">
-            export PATH=$PATH:$HOME/.kerl/18.2.1/bin
-            export PATH=$PATH:$HOME/.kiex/bin
-            source "$HOME/.kiex/elixirs/elixir-1.2.3.env"
-
-            должно работать:
-            mix new project_name
-            </code></pre>
-          </section>
-
-
-          <section style="text-align: left;">
-            <p>
-              Далее ставим феникс и можно работать
-            </p>
-            <pre><code class="bash">
-            mix archive.install https://github.com/phoenixframework/archives/raw/master/phoenix_new.ez
-
-            должно работать:
-            mix phoenix.new project_name
-            </code></pre>
-          </section>
-        </section>
-
-        <section>
-          <section>
-            <h3>
-            Elixir overview
-            </h3>
-            <p> Главная фишка эликсира - это BEAM, виртуальная машина эрланга. Посмотрим чем может удивить эрланг! </p>
-          </section>
-          <section>
-            <p> Простейшие функции </p>
-
-            <pre><code class="elixir">
-            hello_func = fn ->
-              IO.puts "hello"
-            end
-            </code></pre>
-          </section>
-
-          <section>
-            <p> Порождение процесса </p>
-
-            <pre><code class="elixir">
-            spawn(hello_func)
-            </code></pre>
-          </section>
-
-          <section>
-            <p> Порождение процесса, ожидающего сообщениe </p>
-
-            <pre><code class="elixir">
-            hello_func = fn ->
-              IO.puts "hello"
-              receive do
-                :goodbye ->
-                  IO.puts "goodbye"
-                _ ->
-                  IO.puts "unknown message"
-              end
-            end
-
-            spawn(hello_func)
-            </code></pre>
-
-            <p> Процесс завершается с exit(normal) и второй раз не отреагирует на наше сообщение </p>
-          </section>
-
-          <section>
-            <p> Функция в модуле (c хвостовой рекурсией)</p>
-
-            <pre><code class="elixir">
-            defmodule Hello do
-              def hello_func do
-                IO.puts "hello"
-                receive do
-                  :goodbye ->
-                    IO.puts "goodbye"
-                    hello_func
-                  _ ->
-                    IO.puts "unknown message"
-                    hello_func
-                end
-              end
-            end
-
-            pid = spawn(Hello, :hello_func, [])
-            send(pid, :goodbye)
-            send(pid, :foobar)
-            </code></pre>
-          </section>
-
-          <section>
-            <p> Функция в модуле передающая стейт между вызовами (c хвостовой рекурсией) </p>
-
-            <pre><code class="elixir">
-            defmodule Hello do
-              def hello_func(counter) do
-                IO.puts "hello"
-                receive do
-                  :goodbye ->
-                    IO.puts "You've said goodbye #{counter} times"
-                    new_counter = counter + 1
-                    hello_func(new_counter)
-                  _ ->
-                    IO.puts "unknown message"
-                    hello_func(counter)
-                end
-              end
-            end
-
-            pid = spawn(Hello, :hello_func, [])
-            send(pid, :goodbye)
-            send(pid, :foobar)
-            </code></pre>
-          </section>
-
-          <section>
-            <p> Интроспекция в эрланге / эликсире </p>
-
-            <pre><code class="elixir">
-            :observer.start
-            </code></pre>
-
-            <p> А вообще тема серьёзная и требует изучения (есть разные интсрументы как в эрланге, так и в эликсире) <p>
-
-            <p> Можно почитать <a href="http://fprog.ru/2010/issue5/maxim-treskin-erlang-introspection/">тут</a> и <a href="http://levgem.livejournal.com/463349.html">тут</a> для ознакомления </p>
-
-          </section>
-
-          <section>
-            <p> Составление пифагоровых троек через генераторы списков (List Comprehensions) </p>
-
-            <pre><code class="elixir">
-              defmodule Triple do
-                def pythagorean(n) when n > 0 do
-                  for a <- 1..n,
-                    b <- 1..n,
-                    c <- 1..n,
-                    a + b + c <= n,
-                    a*a + b*b == c*c,
-                    do: {a, b, c}
-                end
-              end
-
-              Triple.pythagorean(48)
-            </code></pre>
-
-            <p> LC используется в фениксовых темплейтах для работы с коллекциями </p>
-          </section>
-
-          <section>
-            <p> Удобности для асинхронного кода (промисы)</p>
-
-            <pre><code class="elixir">
-            task = Task.async(fn -> 1 + 2 + 3 end)
-            res  = 4 + 5
-            res + Task.await(task)
-            </code></pre>
-
-            <p> Распределённый вариант </p>
-            <pre><code class="elixir">
-            task = Task.Supervisor.async {CustomSupervisor, :"foo@computer-name"}, fn ->
-              {:ok, node()}
-            end
-            </code></pre>
-          </section>
-
-          <section>
-            <p> Пример скрипта на async await </p>
-
-            <pre><code class="elixir">
-              defmodule WebsitePipeline do
-                #  def map_titles(sites) do
-                #    sites
-                #    |> Enum.map(fn(url) ->
-                #      url |> get_body |> extract_title
-                #    end)
-                #  end
-
-                def map_titles(sites) do
-                  sites
-                  |> Enum.map(fn(url) ->
-                    Task.async(fn -> url |> get_body |> extract_title end)
-                  end)
-                  |> Enum.map(&Task.await/1)
-                end
-
-                defp get_body(url) do
-                  IO.inspect url
-                  HTTPotion.get(url).body
-                end
-
-                defp extract_title(html) do
-                  title_pattern = ~r"<title>([^<]*)</title>"
-                  Regex.run(title_pattern, html) |> Enum.at(1)
-                end
-              end
-
-              defmodule WebsitePipelineTest do
-                use ExUnit.Case
-
-                test "Mapping a pipeline of websites" do
-                  sites = ["http://example.org",
-                           "http://slashdot.org",
-                           "http://elixir-lang.org",
-                           "http://www.erlang.org"]
-                  expected_titles = ["Example Domain",
-                                     "Slashdot: News for nerds, stuff that matters",
-                                     "Elixir",
-                                     "Erlang Programming Language"]
-                  assert expected_titles == WebsitePipeline.map_titles(sites)
-                end
-              end
-            </code></pre>
-          </section>
-
-          <section>
-            <p> Управление in-memory состоянием (простая абстракция вокруг стейта процесса - Agent) </p>
-
-            <pre><code class="elixir">
-            {:ok, agent} = Agent.start_link fn -> [] end
-            Agent.update(agent, fn list -> ["eggs"|list] end)
-            Agent.get(agent, fn list -> list end)
-            Agent.stop(agent)
-            </code></pre>
-
-            <p> Умеет get_and_update за одну операцию </p>
-          </section>
-
-          <section>
-            <p> Управление in-memory состоянием (GenServers) </p>
-            <small>Если что-то посложнее и похитрее, то правильнее использовать <a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html">GenServer</a></small>
-
-          </section>
-
-          <section>
-            <p> Любимая программа Джо Армстронга </p>
-
-            <pre><code class="elixir">
-            # shell 1
-            iex --name "foo@192.168.1.69"
-            :erlang.set_cookie(node(), :foobar)
-            :erlang.register(:shell, self())
-
-            returned_value = receive do
-              {:become, some_fn} ->
-                some_fn.()
-            end
-
-            #shell 2
-            iex --name "bar@192.168.1.60"
-            erlang.set_cookie(node(), :foobar)
-
-            echo_server = fn ->
-              receive do
-                {from, value} ->
-                  send(from, value)
-              end
-            end
-
-            foo = {:shell, :"foo@192.168.1.69"}
-            send(foo, {:become, echo_server})
-            send(foo, {self, "hey there"})
-            flush()
-            </code></pre>
-          </section>
-
-          <section>
-            <p> Протоколы - вариант реализации полиморфизма в эликсире </p>
-
-            <pre><code class="elixir">
-            defprotocol Odd do
-              @doc "Returns true if data is considered odd"
-
-              def odd?(data)
-            end
-
-            defimpl Odd, for: Integer do
-              require Integer
-
-              def odd?(data) do
-                data
-                |> Integer.is_odd
-              end
-            end
-
-            defimpl Odd, for: Float do
-              def odd?(data) do
-                Odd.odd?(round(Float.floor(data)))
-              end
-            end
-
-            defimpl Odd, for: List do
-              def odd?(data) do
-                Odd.odd?(Enum.count(data))
-              end
-            end
-
-            Odd.odd?(2.1)
-            Odd.odd?([1])
-            Odd.odd?(%Animal{})
-            </code></pre>
-
-            <p> Активно используется в phoenix для сериализации-десериализации </p>
-          </section>
-
-          <section>
-            <p> Если необходимо можно использовать эрланговские библиотеки без особых проблем </p>
-
-            <a href="https://bitbucket.org/DavydenkovM/link_extractor/overview"> Пример простого сервиса c использованием пула воркеров на эрланге (poolboy)</a>
-          </section>
-
-          <section>
-            <p> А ещё в elixir довольно хорошие возможности по метапрограммированию, созданию макросов и написанию DSL </p>
-            <a href="http://elixir-lang.org/getting-started/meta/quote-and-unquote.html">Можно почитать в оффициальных доках</a>
-          </section>
-        </section>
-
-        <section>
-          <h3>
-            Phoenix overview
-          </h3>
-        <section>
+          <p><b>
+            Зачем нужно, как реализовано и когда применять
+          </b></p>
           <br>
-          <p> Рассмотрим на реальном примере - <a href="https://github.com/bigardone/phoenix-trello">Phoenix-trello</a></p>
-          <h4> что хотелось бы отметить: </h4>
-          <ul>
-            <li> асинхронные тесты (есть даже интеграционные на хромдрайвере), фабрики, теги для тестов</li>
-            <li> миграции и сиды так знакомые rails разработчикам </li>
-            <li> brunch.io заменён на webpack </li>
-            <li> есть библиотека для авторизации через JWT, которая используется для аутентификации каналов, тсп сокетов и ендпоинтов</li>
-            <li> есть довольно приятный статический анализатор стиля кода аля рубокоп (mix credo)</li>
-            <li> довольно оправданный кейс для использования веб сокетов </li>
-          </ul>
+
+          <p>
+            Метапрограммирование - тёмная сторона силы :) Большие возможности и много граблей при неправильном подходе.
+          </p>
+
+          <p>
+            В эликсире реализовано через макросы. И сам язык - это маленькое ядро специальных форм и обвеска из макросов на разные случаи жизни. 
+          </p>
+
+          <p>
+          Язык проектировался с учётом расширяемости и предоставляет для этого много хорошего
+          </p>
+
+          <p> (Language consumer |> Language creator) </p>
 
         </section>
-          <section>
-            <p> Другой пример - <a href="https://github.com/hexpm/hex_web">Hex Web</a>, API сервер для сайта package менеджера Hex.pm</p>
-          </section>
+
+        <section>
+          <p><b>
+            Танцы вокруг AST
+          </b></p>
+
+          <p>
+            Абстрактное Синтаксическое Дерево (AST) - это то, во что компилируются/транслируются большинство языков и что в последствии трансформируется в байткод/машинный код. Обычно разработчик никогда не взаимодействует с AST напрямую.
+          </p>
+
+          <p>
+            Чтобы сделать язык таким расширяемым, Хосе Валим сделал очень интересную вещь. Он предоставил разработчикам интерфейсы для прямой трансормации и интроспекции AST.
+          </p>
+        </section>
+
+        <section>
+          <p><b>
+            Макросы и доступ к AST
+          </b></p>
+
+          <p><small>
+            Макрос - это код, который генерирует код. В эликсире макрос получает на входе AST и на выходе отдаёт AST. Могут разворачиваться до компиляции.
+          </small></p>
+
+          <p><small>
+          C помощью макроса <b>quote</b> мы можем получить репрезентацию любого куска кода в виде AST(и делать всякие хитрые трюки)
+          </small></p>
+
+          <pre><code class="elixir">
+          iex> quote do: 1 + 2
+          {:+, [context: Elixir, import: Kernel], [1, 2]}
+          iex> quote do: div(10, 2)
+          {:div, [context: Elixir, import: Kernel], [10, 2]}
+          iex> quote do: 1 + 2 + 3
+          {:+, [context: Elixir, import: Kernel],
+           [{:+, [context: Elixir, import: Kernel], [1, 2]}, 3]}
+          </code></pre>
+        </section>
+
+        <section>
+          <p><b>
+            Пример макроса
+          </b></p>
+          <pre><code class="elixir">
+            iex> Math.say 5 + 2
+            5 plus 2 is 7
+            7
+            iex> Math.say 18 * 4
+            18 times 4 is 72
+            72
+          </code></pre>
+          <pre><code class="elixir">
+          defmodule Math do
+            # {:+, [context: Elixir, import: Kernel], [5, 2]}
+            defmacro say({:+, _, [lhs, rhs]}) do
+              quote do
+                lhs = unquote(lhs)
+                rhs = unquote(rhs)
+                result = lhs + rhs
+                IO.puts "#{lhs} plus #{rhs} is #{result}"
+                result
+              end
+            end
+
+            # {:*, [context: Elixir, import: Kernel], [8, 3]}
+            defmacro say({:*, _, [lhs, rhs]}) do
+              quote do
+                lhs = unquote(lhs)
+                rhs = unquote(rhs)
+                result = lhs * rhs
+                IO.puts "#{lhs} times #{rhs} is #{result}"
+                result
+              end
+            end
+          end
+          </code></pre>
+        </section>
+
+        <section>
+          <p><b>
+            Ещё пример. Добавление оператора в язык
+          </b></p>
+          <pre><code class="elixir">
+          import Kernel, except: [unless: 2]
+          import ControlFlow
+          unless 2 == 5, do: "block entered"
+            "block entered"
+          unless 5 == 5, do: "block entered"
+            nil
+          </code></pre>
+
+          <pre><code class="elixir">
+            defmodule ControlFlow do
+              defmacro unless(expression, do: block) do
+                quote do
+                  if !unquote(expression), do: unquote(block)
+                end
+              end
+            end
+          </code></pre>
+        </section>
+
+        <section>
+          <p><b>
+            unquote
+          </b></p>
+
+          <p><small>
+          C помощью макроса <b>unquote</b> мы можем заинджектить значение в AST
+          </small></p>
+
+          <pre><code class="elixir">
+          number = 5
+          ast = quote do
+            number * 10
+          end
+          # {:*, [context: Elixir, import: Kernel], [{:number, [], Elixir}, 10]}
+
+          Code.eval_quoted ast
+          # ** (CompileError) nofile:1: undefined function number/0
+          </code></pre>
+
+          <pre><code class="elixir">
+          number = 5
+          ast = quote do
+            unquote(number) * 10
+          end
+          # {:*, [context: Elixir, import: Kernel], [5, 10]}
+
+          Code.eval_quoted ast
+          {50, []}
+          </code></pre>
+        </section>
+
+        <section>
+          <p><b>
+            Ещё пример. Добавление оператора в язык
+          </b></p>
+          <p><small>
+          C помощью макроса <b>unquote</b> мы можем заинджектить значение в AST
+          </small></p>
+
+          <pre><code class="elixir">
+            defmodule ControlFlow do
+              defmacro unless(expression, do: block) do
+                quote do
+                  if !unquote(expression), do: unquote(block)
+                end
+              end
+            end
+          </code></pre>
+        </section>
+
+        <section>
+          <p><b>
+            Разворачивание макросов
+          </b></p>
+
+          <img width="250" height="400" data-src="metaprogramming_elixir/macros_expansion.png" alt="macros_expansion">
+          <p><small>
+          В языке есть средства для просмотра AST на каждом из этапов
+          </small></p>
+        </section>
+
+        <section>
+          <p><b>
+            Тестовый фреймворк за 60 строк кода
+          </b></p>
+
+          <p><small>
+          Интерфейсы
+          </small></p>
+
+          <pre><code class="elixir">
+            JavaScript:
+            expect(value).toBe(true);
+            expect(value).toEqual(12);
+            expect(value).toBeGreaterThan(100);
+
+            Ruby:
+            assert value
+            assert_equal value, 12
+            assert_operator value, :<=, 100
+
+            Elixir:
+            assert value
+            assert value == 12
+            assert value <= 100
+          </code></pre>
+
+          <p><small>
+          В JS и Ruby используются разные методы для выполнения assertion, т.к. нужно выводить различный текст для разного типа операций.
+          </small></p>
+          <p><small>
+          В Elixir того же функционала можно добиться, используя макрос (pattern matching по кускам AST)
+          </small></p>
+        </section>
+
+        <section>
+          <p><b>
+            Тестовый фреймворк за 60 строк кода
+          </b></p>
+
+          <p><small>
+          Как будем пользоваться:
+          </small></p>
+          <pre><code class="elixir">
+            defmodule MathTest do
+              use Assertion
+
+              test "First test description" do
+                assert 5 == 55
+              end
+
+              test "Second test description" do
+                assert 5 > 5
+              end
+            end
+
+            MathTest.run()
+            #     ===============================================
+            #     FAILURE: First test description
+            #     ===============================================
+            #     Expected:           5
+            #     to be equal to:     55
+
+
+            #     .
+            #     ===============================================
+            #     FAILURE: Second test description
+            #     ===============================================
+            #     Expected:           5
+            #     to be greater than: 5
+
+          </pre></code>
+
+          <p><small>
+          Как будем писать
+        (<a href="https://github.com/DavydenkovM/elixir_katas/blob/master/metaprogramming/02.assertion_framework/module_extension_custom.exs">Ссылка на исходники</a> для удобства чтения)
+          </small></p>
+
+        </section>
+
+        <section>
+          <p><b>
+            Тестовый фреймворк за 60 строк кода
+          </b></p>
+
+          <p><small><b>
+          Что примечательного:
+          </b></small></p>
+
+          <small>
+          <ul>
+            <li> <b>__using__</b> - функция вызываемая когда библиотечный модуль вставляется в __CALLER__ модуль (как included в Ruby при include)</li>
+            <li> <b> Аттрибуты модуля </b> - специальные переменные, в которые можно записать данные на этапе развёртывания макросов или компиляции (в нашем случае туда пишутся имена тестов). </li>
+            <li> <b>__before__compile__</b> позволяет отложить развёртывание макросов до этапа компиляции (когда аттрибуты модуля будут заполнены) </li>
+            <li> Количество генерируемого кода невелико. Основную работу делает модуль к которому делегируют - <b>Assertion.Test</b> (это обычный модуль без магии, который легко тестировать)</li>
+          </ul>
+          </small>
+        </section>
+
+        <section>
+          <p><b>
+            I18n.t за 65 строк кода
+          </b></p>
+
+          <p><small>
+          Как будем пользоваться:
+          </small></p>
+          <pre><code class="elixir">
+            defmodule I18n do
+              use Translator
+
+              locale "en",
+                flash: [
+                  hello: "Hello %{first} %{last}!",
+                  bye: "Bye, %{name}!"
+                ],
+                users: [
+                  title: "Users"
+                ]
+
+              locale "fr",
+                flash: [
+                  hello: "Salut %{first} %{last}!",
+                  bye: "Au revoir, %{name}!"
+                ],
+                users: [
+                  title: "Utilisateurs"
+                ]
+            end
+
+            ## I18n.t("en", "flash.hello", first: "Chris", last: "McCord")
+            ## "Hello Chris Mccord!"
+
+            ## I18n.t("fr", "flash.hello", first: "Chris", last: "McCord")
+            ## "Salut Chris McCord!"
+
+            ## I18n.t("en", "users.title")
+            ## "Users"
+          </pre></code>
+
+          <p><small>
+          Как будем писать
+        (<a href="https://github.com/DavydenkovM/elixir_katas/blob/master/metaprogramming/03.advanced/i18n.exs">Ссылка на исходники</a> для удобства чтения)
+          </small></p>
+
         </section>
 
         <section>
