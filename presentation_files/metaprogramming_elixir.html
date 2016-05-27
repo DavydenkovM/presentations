@@ -66,7 +66,7 @@
 
         <section>
           <p><b>
-            Зачем нужно, как реализовано и когда применять
+            Зачем нужно и как реализовано
           </b></p>
           <br>
 
@@ -75,14 +75,14 @@
           </p>
 
           <p>
-            В эликсире реализовано через макросы. И сам язык - это маленькое ядро специальных форм и обвеска из макросов на разные случаи жизни. 
+            В эликсире реализовано через макросы. И сам язык - это маленькое ядро специальных форм и обвеска из макросов на разные случаи жизни.
           </p>
 
           <p>
           Язык проектировался с учётом расширяемости и предоставляет для этого много хорошего
           </p>
 
-          <p> (Language consumer |> Language creator) </p>
+          <p> Философия (Language consumer |> Language creator) </p>
 
         </section>
 
@@ -193,7 +193,7 @@
           </b></p>
 
           <p><small>
-          C помощью макроса <b>unquote</b> мы можем заинджектить значение в AST
+          C помощью макроса <b>unquote</b> мы можем заинжектить значение в AST
           </small></p>
 
           <pre><code class="elixir">
@@ -223,9 +223,6 @@
           <p><b>
             Ещё пример. Добавление оператора в язык
           </b></p>
-          <p><small>
-          C помощью макроса <b>unquote</b> мы можем заинджектить значение в AST
-          </small></p>
 
           <pre><code class="elixir">
             defmodule ControlFlow do
@@ -245,7 +242,7 @@
 
           <img width="250" height="400" data-src="metaprogramming_elixir/macros_expansion.png" alt="macros_expansion">
           <p><small>
-          В языке есть средства для просмотра AST на каждом из этапов
+          В языке есть средства для просмотра AST на каждом из этапов (см Macro.expand_once)
           </small></p>
         </section>
 
@@ -276,7 +273,7 @@
           </code></pre>
 
           <p><small>
-          В JS и Ruby используются разные методы для выполнения assertion, т.к. нужно выводить различный текст для разного типа операций.
+          В JS и Ruby используются разные методы для выполнения assertion, т.к. нужно выводить различные сообщения об ошибках для разного типа операций.
           </small></p>
           <p><small>
           В Elixir того же функционала можно добиться, используя макрос (pattern matching по кускам AST)
@@ -310,9 +307,7 @@
             #     ===============================================
             #     Expected:           5
             #     to be equal to:     55
-
-
-            #     .
+            #
             #     ===============================================
             #     FAILURE: Second test description
             #     ===============================================
@@ -392,6 +387,132 @@
           Как будем писать
         (<a href="https://github.com/DavydenkovM/elixir_katas/blob/master/metaprogramming/03.advanced/i18n.exs">Ссылка на исходники</a> для удобства чтения)
           </small></p>
+
+        </section>
+
+        <section>
+          <p><b>
+            I18n.t за 65 строк кода
+          </b></p>
+
+          <p><small><b>
+          Что примечательного:
+          </b></small></p>
+
+          <small>
+          <ul>
+            <li> Функция <b>interpolate</b> занимается compile-time оптимизацией при интерполяции строк. Если встретилась интерполяция, то строка заменяется на конкатенированную на этапе компиляции. Если нет интерполяции, возвращается просто ("" <> "значение ключа") </li>
+            <li> Это позволяет не тратить время в рантайме на проверку регулярками, например, есть интерполяция в значении ключа или нет </li>
+          </ul>
+          </small>
+        </section>
+
+        <section>
+          <p><b>
+            Генерация кода из внешних источников
+          </b></p>
+
+          <p><small><b>
+          Mime-type по типу файла и наоборот (с фоллбэками и хелпером) - 15 строк
+          </b></small></p>
+
+          <pre><code class="elixir">
+            defmodule Mime do
+              @external_resource = mimes_path = Path.join([__DIR__, "mimes.txt"])
+
+              for line <- File.stream!(mimes_path, [], :line) do
+                [type, rest] = line |> String.split("\t") |> Enum.map(&String.strip(&1))
+                extensions = String.split(rest, ~r/,\s?/)
+
+                def exts_from_type(unquote(type)), do: unquote(extensions)
+                def type_from_ext(ext) when ext in unquote(extensions), do: unquote(type)
+              end
+
+              def exts_from_type(_type), do: []
+              def type_from_ext(_ext), do: nil
+              def valid_type?(type), do: exts_from_type(type) |> Enum.any?
+            end
+
+            ## USAGE
+            ## c "mime.exs"
+            ## [Mime]
+            #
+            ## Mime.exts_from_type("image/jpeg")
+            ## [".jpeg", ".jpg"]
+            #
+            ## Mime.type_from_ext(".jpg")
+            ## "image/jpeg"
+            #
+            ## Mime.valid_type?("text/html")
+            ## true
+            #
+            ## Mime.valid_type?("text/emoji")
+            ## false
+          </pre></code>
+        </section>
+
+        <section>
+          <p><b>
+            Генерация кода из внешних источников
+          </b></p>
+
+          <p><small><b>
+          Что примечательного:
+          </b></small></p>
+
+          <small>
+          <ul>
+            <li> наличие аттрибута <b>@external_resource</b> даст знать виртуальной машине, что модуль нужно перекомпилировать, если внешний ресурс изменился. Довольно удобно </li>
+            <li> Можно вызывать unquote независимо от quote блока (чтобы в голову функции динамически вставлять паттерн, напрмер). Это назвается unquoted fragments</li>
+          </ul>
+          </small>
+
+        </section>
+
+        <section>
+          <p><b>
+            Консольная интеграция с github API в 19 строк
+          </b></p>
+
+        <a href="https://github.com/DavydenkovM/elixir_katas/tree/master/metaprogramming/03.advanced/hub/">Исходники</a>
+
+        <pre><code class="elixir">
+          defmodule Hub do
+           HTTPotion.start
+            @username "DavydenkovM"
+
+            "https://api.github.com/users/#{@username}/repos"
+            |> HTTPotion.get(["User-Agent": "Elixir"])
+            |> Map.get(:body)
+            |> Poison.decode!
+            |> Enum.each fn repo ->
+              def unquote(String.to_atom(repo["name"]))() do
+                unquote(Macro.escape(repo))
+              end
+            end
+
+            def go(repo) do
+              url = apply(__MODULE__, repo, [])["html_url"]
+              IO.puts "Launching browser to #{url}..."
+              System.cmd("open", [url])
+            end
+          end
+        </pre></code>
+
+        <pre><code class="elixir">
+          iex(1)> Hub.                      
+          DavydenkovM.github.io/0           
+          activejob-retry/0                 capybara/0                        
+          design-patterns-in-ruby/0         dotenv-deployment/0               
+          dotenv/0                          dotfiles/0                        
+          elixir-webdriver/0                elixir_katas/0                    
+          go/1                              hello_phoenix/0                   
+          jekyller/0                        learnyounode_workshopper/0        
+          phoenix_commerce/0                postgres_snippets/0               
+          presentations/0                   rails_and_contracts/0             
+          rails_contexts/0                  react-webpack-rails-tutorial/0    
+          sips_fetcher/0                    sshkit/0                          
+        </pre></code>
 
         </section>
 
