@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Elm-lang review</title>
+    <meta name="description" content="Metaprogramming Elixir">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../css/reveal.css">
+    <link rel="stylesheet" href="../css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../css/print/pdf.css' : '../css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+
+  <body>
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h2>Говорим о новом</h2>
+          <h4>Обзор функционального типизированного языка для фронтенд разработки </h4>
+          <h3>Elm-lang </h3>
+          <p>
+            <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
+          </p>
+        </section>
+
+        <section>
+            <h2>
+              Содержание
+            </h2>
+          <br>
+
+            <ul>
+              <li> С чего всё началось или зачем спасать фронтенд :) ?</li>
+              <li> Размышления об истории развития языков </li>
+              <li> Идеи в основе языка </li>
+              <li> Синтаксические особенности и главные фишки </li>
+              <li> Elm architecture </li>
+              <li> Недостатки языка </li>
+              <li> Ссылочки </li>
+            </ul>
+        </section>
+
+        <section>
+          <p><b>
+            С чего всё началось
+          </b></p>
+
+          <p>
+            Жили-были хаскелисты, и было им одиноко. И решили они притащить хаскель во фронтенд. И всё завертелось..
+          </p>
+
+          <img width="850" height="400" data-src="elm-lang-2017/inception.png" alt="ast">
+          </small>
+
+        </section>
+
+        <section>
+          <p><b>
+            Немного про историю развития языков
+          </b></p>
+
+          <p>
+            Каждое поколение программистов боролось со своими проблемами
+          </p>
+
+          <img width="850" height="250" data-src="elm-lang-2017/langs_problems.png" alt="ast">
+          </small>
+        </section>
+
+        <section>
+          <p>
+            Mainstream языки в настоящее время находятся под влиянием ФП и достаточно много нового адаптируют под себя
+          </p>
+
+          <img width="850" height="250" data-src="elm-lang-2017/langs_problems_2.png" alt="ast"> 
+
+          <p>
+            Однако до конца не ясно в какую сторону развивается JS
+          </p>
+        </section> 
+
+        <section>
+          <p>
+            Есть <strike>два стула </strike> &nbsp;две оси. На одной доступность языка для понимания и скорость вхождения в язык, на другой - поддерживаемость и расширяемость написанных программ. Что выберете?
+          </p>
+
+          <img width="650" height="420" data-src="elm-lang-2017/two_chairs.png" alt="ast"> 
+
+        </section> 
+
+        <section>
+          <p>
+            Однако не всё так однозначно
+          </p>
+
+          <img width="800" height="600" data-src="elm-lang-2017/three_chairs.png" alt="ast"> 
+
+        </section> 
+
+        <section>
+          <p>
+            Светлое будущее
+          </p>
+
+          <img width="800" height="600" data-src="elm-lang-2017/ideal_lang.png" alt="ast"> 
+
+        </section> 
+
+        <section>
+          <p>
+            В основе нового языка авторы закладывали некоторые идеи 
+          </p> 
+        </section> 
+
+        <section>
+          <p>
+            Дружелюбность к пользователю
+          </p> 
+
+          <img width="800" height="600" data-src="elm-lang-2017/elm_communication.png" alt="ast"> 
+
+        </section> 
+
+        <section>
+          <p>
+            Формирование современного коммьюнити
+          </p> 
+
+          <img width="650" height="420" data-src="elm-lang-2017/elm_culture.png" alt="ast"> 
+          <p>
+            
+          <a href="http://debug.elm-lang.org/edit/Mario.elm">Mario Time Traveller</a>
+          </p> 
+
+        </section> 
+
+        <section>
+          <p>
+            Минимализм в фичах
+          </p> 
+
+          <img width="650" height="420" data-src="elm-lang-2017/elm_minimalism.png" alt="ast"> 
+        </section> 
+
+        <section>
+          <p>
+            Tooling, который в разы сложнее создать в JS и языках-конкурентах (TypeScript, Dart)
+          </p> 
+
+          <img width="650" height="420" data-src="elm-lang-2017/elm_tooling.png" alt="ast"> 
+        </section> 
+
+        <section>
+          <img width="800" height="600" data-src="elm-lang-2017/elm_syntax.png" alt="ast"> 
+        </section> 
+
+        <section>
+          <p>
+            Практически отсутствие рантайм ошибок (защита от опечаток и грубых логических несостыковок), управление эффектами, надежда на WebAssemly и многое другое
+          </p> 
+
+          <img width="650" height="300" data-src="elm-lang-2017/elm_no_runtime_errors.png" alt="ast"> 
+          <p>
+					<a href="http://www.slideshare.net/amirbarylko/elm-delightful-web-development?qid=5bfac2f3-a533-4042-a10f-5e0a08c099d9&v=&b=&from_search=1"> Другие фишки языка и Elm architecture </a>
+          </p> 
+        </section> 
+
+        <section>
+          <p>
+            Примеры <a href="http://elm-lang.org/examples"> простые </a> и <a href="http://builtwithelm.co/"> сложные </a>
+          </p> 
+        </section> 
+
+        <section>
+          <p>
+             Но всё же в каждой бочке мёда есть ложка дёгтя. И не одна.. (я остался разочарован языком)
+          </p> 
+        </section> 
+          
+        <section>
+          <p>
+             Минусы
+          </p> 
+
+					<small>
+					<ul>
+						<li> Язык вовсе не так прост как его подают. Чтобы его понять мне пришлось осилить книжку по Haskell на 1000 страниц </li>
+						<li> Отсутствие средств писать полиморфический код (это то за что бьют Go-lang). Из-за этого в языке есть дублирование и неконсистентность (List.map, Set.map и тд) </li>
+						<li> Пока что слабо развита инфраструктура и тулинг вокруг языка. Шаг влево, шаг вправо и готовься писать велосипед (селекты, автокомплиты, календари, драг н дроп, роутеры) </li>
+						<li> Интероперабилити с JS требует писать много много кода руками. И не самого простого. Проще застрелиться чем вставить на страницу TinyMCE и настроить его плагины </li>
+						<li> Создатель языка достаточно молод и многие жалуются что он страдает острой формой диктаторства </li>
+					</ul>
+					</small>
+        </section> 
+
+        <section>
+          <p><b>
+            Возможно у языка есть будущее. Однако на текущий момент чтобы им свободно пользоваться нужно иметь очень высокий уровень квалификации. Я пока не осилил.
+          </b></p>
+        </section>
+
+        <section>
+          <h3>
+            Ссылочки
+          </h3>
+            <ul>
+              <li> <a href="http://elm-lang.org/examples">Примеры</a> </li>
+							<li> <a href="http://builtwithelm.co/"> Примеры посложнее </a> </li>
+              <li> <a href="https://github.com/AlexMost/2048">Игра 2048</a> </li>
+              <li> <a href="https://www.dailydrip.com/topics/elm">Тут учат делать вещи на Elm</a> </li>
+							<li> <a href="http://www.parsonsmatt.org/2015/10/03/elm_vs_purescript.html"> Битва хеллоуворлдов с более зрелым purescript </a> </li>
+            </ul>
+        </section>
+
+        <section style="text-align: left;">
+          <h1>THE END</h1>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="../lib/js/head.min.js"></script>
+    <script src="../js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '../plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../plugin/zoom-js/zoom.js', async: true },
+          { src: '../plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
