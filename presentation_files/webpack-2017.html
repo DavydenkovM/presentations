@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Webpack2. Interesting features review</title>
+    <meta name="description" content="Webpack2">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../css/reveal.css">
+    <link rel="stylesheet" href="../css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../css/print/pdf.css' : '../css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+
+  <body>
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h2>Говорим о новом</h2>
+          <h4>Что хорошего даёт разработчику вебпак 2</h4>
+          <p>
+            <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
+          </p>
+        </section>
+
+        <section>
+          <p><b>
+            node.js стеку в Нетологии ~ 1 год
+          </b></p>
+
+          <p>
+            Тогда это был прорыв. Сейчас мы можем лучше
+          </p>
+        </section>
+
+        <section>
+            <h2>
+              Buzzwords
+            </h2>
+          <br>
+
+          <ul>
+            <li> small tips </li>
+            <li> tree-shaking </li>
+            <li> code splitting </li>
+            <li> commons chunking </li>
+            <li> longterm caching </li>
+            <li> offline with service workers </li>
+            <li> testing and code coverage</li>
+            <li> deploy </li>
+          </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Webpack
+          </b></p>
+
+          <img width="800" height="600" data-src="small_open_source_tips/title.jpg" alt="arch1">
+        </section>
+
+        <section>
+          <p><b>
+             Small tips
+           </b></p>
+
+          <ul>
+            <li> webpack.name.babel.js - to transpile config itself (note babel postfix, es6 modules, etc.) </li>
+            <li> 1 config for test/dev/prod using webpack-config-utils (KISS principle)</li>
+            <li> Chrome debug-mode! <i> node-nightly --inspect </i> (or use latest node version)</li>
+            <li> babel-loader allows to remove 'use-strict' (customize in .babelrc) </li>
+            <li> compose package.json tasks using <i>pre-*</i> and <i>post-*</i> tasks </li>
+            <li> use yargs to keep options parsing simple </li>
+            <li> TDD (karma still > than AVA) </li>
+          </ul>
+        </section>
+
+        <section>
+          <p><b>
+            Tree shaking
+          </b></p>
+
+          <p>
+            Inspired by rollup.js
+          </p>
+
+          <p>
+            Doesn't work with require.js
+          </p>
+
+          <p>
+            Use es2015 imports
+          </p>
+
+          <p>
+            see helpers.js (inspect result with source maps)
+          </p>
+
+          <a href="https://github.com/kentcdodds/es6-todomvc/blob/master/.babelrc#L3"> .babelrc </a>
+        </section>
+
+        <section>
+          <p><b>
+            Code splitting
+          </b></p>
+
+          <p>
+            Всё в один бандл - плохая стратегия. Хочется маленькие бандлы, но хочется и сохранить быстрый ререндер при переходе к тяжёлым частям приложения
+          </p>
+
+          <p>
+          Выход - динамические импорты. Выносим heavy lifting в отдельные бандлы (d3, тяжёлые библиотеки типа react, lazy evaluation approach) (<a href="https://github.com/kentcdodds/es6-todomvc/blob/master/src/graph/index.js#L49-L53">Смотрим демку про System.import, говорим о require.ensure</a> )
+          </p>
+        </section>
+
+        <section>
+          <p><b>
+            Commons chunking
+          </b></p>
+
+          <p>
+            Каждый неймспейс/страницу веб сервиса можно рассматривать как отдельное приложение (entry points in webpack config). И зачастую у каждого из этих приложений есть общий код, который хочется кешировать в браузере (реакт, редакс, плагины, любой вендор код должен быть отделен от логики приложения). При переходе между приложениями грузить только маленькие бандлы.
+          </p>
+
+          <p>
+          Можно использовать webpack.optimize.CommonsChunkPlugin (<a href="https://github.com/kentcdodds/es6-todomvc/compare/FEM/05.1-code-splitting...FEM/06.0-commons-chunk">Смотрим дифф</a> )
+
+          </p>
+
+          <p>
+          Чтобы заинжектить в html лейаут скрипт теги используется HtmlWebpackPlugin
+
+          </p>
+        </section>
+
+        <section>
+          <p><b>
+            Longterm caching
+          </b></p>
+
+          <p>
+            Дайджесты на коммон чанкс пересчитываются на каждый билд. Можно добавить манифест, чтобы дайджесты считались только по апдейту кода
+          </p>
+          <a href="https://github.com/kentcdodds/es6-todomvc/compare/FEM/06.0-commons-chunk...FEM/06.1-longterm-caching">Смотрим дифф</a>
+
+        </section>
+
+        <section>
+          <p><b>
+            Экстрактим CSS
+          </b></p>
+
+          <p>
+            Чтобы не происходило мерцания экрана, CSS должен быть загружен в HEAD
+          </p>
+          <a href="https://github.com/kentcdodds/es6-todomvc/compare/FEM/06.1-longterm-caching...FEM/06.2-extract-css">Смотрим дифф</a>
+        </section>
+
+        <section>
+          <p><b>
+            Offline
+          </b></p>
+
+          <p>
+            Оффлайн плагин позволяет закешировать все ассеты приложения в сервис воркере. Удобно для контентных страниц где не нужно заморачиваться с бекендом (Нетология-групп сайт, например)
+          </p>
+          <a href="https://github.com/kentcdodds/es6-todomvc/compare/FEM/06.2-extract-css...FEM/07.0-offline">Смотрим дифф</a>
+        </section>
+
+        <section>
+          <p>
+            Про тестирование и деплой можно посмотреть <a href="http://slides.com/kentcdodds/webpack-deep-dive"> тут </a>
+          </p>
+
+          <p>
+            Также рекомендую всем к просмотру курс <a href="https://frontendmasters.com/courses/webpack/#v=b4kh2n0ys2&skip=1"> Webpack 2 deep dive </a>. Многие вещи которые я упустил там хорошо описаны
+          </p>
+        </section>
+
+        <section style="text-align: left;">
+          <h1>THE END</h1>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="../lib/js/head.min.js"></script>
+    <script src="../js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '../plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../plugin/zoom-js/zoom.js', async: true },
+          { src: '../plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
