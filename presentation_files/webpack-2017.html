@@ -3,7 +3,7 @@
 
   <head>
     <meta charset="utf-8">
-    <title>Webpack2. Interesting features review</title>
+    <title>Webpack 2. New features review</title>
     <meta name="description" content="Webpack2">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -80,18 +80,28 @@
         </section>
 
         <section>
+          <p>
+            Главное назначение webpack - построение графа зависимостей, и разбиение его на бандлы, в которых достаточно удобно упорядочивать эти зависимости
+          </p>
+
+          <img width="800" height="600" data-src="small_open_source_tips/title.jpg" alt="arch1">
+        </section>
+
+        <section>
           <p><b>
              Small tips
            </b></p>
 
           <ul>
-            <li> webpack.name.babel.js - to transpile config itself (note babel postfix, es6 modules, etc.) </li>
-            <li> 1 config for test/dev/prod using webpack-config-utils (KISS principle)</li>
             <li> Chrome debug-mode! <i> node-nightly --inspect </i> (or use latest node version)</li>
-            <li> babel-loader allows to remove 'use-strict' (customize in .babelrc) </li>
-            <li> compose package.json tasks using <i>pre-*</i> and <i>post-*</i> tasks </li>
+            <li> Source maps - devtool (source-map for prod, eval for development) </li>
+            <li> pathinfo - for better navigation in development! </li>
+            <li> keep all tasks in package.json and compose package.json tasks using <i>pre-*</i> and <i>post-*</i> tasks </li>
+            <li> babel-loader allows to remove 'use-strict' from js files (strict by default) </li>
             <li> use yargs to keep options parsing simple </li>
+            <li> 1 config for test/dev/prod using webpack-config-utils (KISS principle)</li>
             <li> TDD (karma still > than AVA) </li>
+            <li> webpack.name.babel.js - to transpile config itself (note babel postfix, es6 modules, etc.) </li>
           </ul>
         </section>
 
@@ -139,7 +149,7 @@
           </b></p>
 
           <p>
-            Каждый неймспейс/страницу веб сервиса можно рассматривать как отдельное приложение (entry points in webpack config). И зачастую у каждого из этих приложений есть общий код, который хочется кешировать в браузере (реакт, редакс, плагины, любой вендор код должен быть отделен от логики приложения). При переходе между приложениями грузить только маленькие бандлы.
+            Каждый неймспейс/страницу веб сервиса можно рассматривать как отдельное приложение (entry points in webpack config). И зачастую у каждого из этих приложений есть общий код, который хочется кешировать в браузере (реакт, редакс, плагины, любой вендор код должен быть отделен от логики приложения). При переходе между приложениями грузить только маленькие бандлы. (поговорить про инжект в head/body)
           </p>
 
           <p>
