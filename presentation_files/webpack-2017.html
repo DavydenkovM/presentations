@@ -54,6 +54,50 @@
         </section>
 
         <section>
+          <p><b>
+            Webpack. Понимание
+          </b></p>
+
+          <img width="600" height="450" data-src="small_open_source_tips/title.jpg" alt="arch1">
+
+          <small>
+            <ul>
+              <li> История про gzip js файлов на Нетологии </li>
+              <li> История про стили на Фоксфорде </li>
+            </ul>
+          </small>
+
+        </section>
+
+        <section>
+          <p>
+            Жизнь без бандлов
+          </p>
+
+          <img width="600" height="450" data-src="webpack-2017/without-webpack.png" alt="arch1">
+        </section>
+
+        <section>
+          <p><small>
+            Главное назначение webpack - построение графа зависимостей, и разбиение его на бандлы, в которых достаточно удобно упорядочивать эти зависимости
+          </small></p>
+
+          <img width="600" height="450" data-src="webpack-2017/deps.png" alt="arch1">
+
+          <p><small>
+            Важно понимать, что построение графа зависимостей основано на СТАТИЧЕСКОМ анализе кода. JS код не исполняется, чтобы построить дерево зависимостей (поэтому не может быть условных зависимостей)
+          </small></p>
+        </section>
+
+        <section>
+          <img width="600" height="450" data-src="webpack-2017/loaders.png" alt="arch1">
+        </section>
+
+        <section>
+          <img width="600" height="450" data-src="webpack-2017/plugins.png" alt="arch1">
+        </section>
+
+        <section>
             <h2>
               Buzzwords
             </h2>
@@ -71,25 +115,10 @@
           </ul>
         </section>
 
-        <section>
-          <p><b>
-            Webpack
-          </b></p>
-
-          <img width="800" height="600" data-src="small_open_source_tips/title.jpg" alt="arch1">
-        </section>
-
-        <section>
-          <p>
-            Главное назначение webpack - построение графа зависимостей, и разбиение его на бандлы, в которых достаточно удобно упорядочивать эти зависимости
-          </p>
-
-          <img width="800" height="600" data-src="small_open_source_tips/title.jpg" alt="arch1">
-        </section>
 
         <section>
           <p><b>
-             Small tips
+             Small tips (not only webpack related)
            </b></p>
 
          <small>
@@ -99,6 +128,8 @@
               <li> pathinfo - for better navigation in development! </li>
               <li> keep all tasks in package.json and compose package.json tasks using <i>pre-*</i> and <i>post-*</i> tasks </li>
               <li> babel-loader allows to remove 'use-strict' from js files (strict by default) </li>
+              <li> use shortcuts (npm i -D package-name)</li>
+              <li> use npm-cache-install instead of npm i (npm-cache-insall install -> nci install)</li>
               <li> use yargs to keep options parsing simple </li>
               <li> 1 config for test/dev/prod using webpack-config-utils (KISS principle)</li>
               <li> TDD (karma still > than AVA) </li>
@@ -143,6 +174,14 @@
           <p>
           Выход - динамические импорты. Выносим heavy lifting в отдельные бандлы (d3, тяжёлые библиотеки типа react, lazy evaluation approach) (<a href="https://github.com/kentcdodds/es6-todomvc/blob/master/src/graph/index.js#L49-L53">Смотрим демку про System.import, говорим о require.ensure</a> )
           </p>
+        </section>
+
+        <section>
+          <p><b>
+            Commons chunking
+          </b></p>
+
+          <img width="600" height="450" data-src="webpack-2017/multiple-entries.png" alt="arch1">
         </section>
 
         <section>
