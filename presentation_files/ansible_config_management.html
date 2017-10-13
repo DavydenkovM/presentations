@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Ansible config management </title>
+    <meta name="description" content="Ansible config management">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../css/reveal.css">
+    <link rel="stylesheet" href="../css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../css/print/pdf.css' : '../css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h2>Говорим о новом</h2>
+          <h4>Как перестать беспокоиться о деплое и конфигах приложения c Ansible </h4>
+          <p>
+            <small>Автор: <a href="http://github.com/DavydenkovM">Давыденков Михаил</a> </small>
+          </p>
+        </section>
+
+        <section>
+            <h2>
+              Содержание
+            </h2>
+
+            <ul>
+              <li> Суть </li>
+              <li> Мнение экспертов </li>
+              <li> Изучаем на практике. Вдохновляющая демка </li>
+              <li> Обзор нюансов ансибла и проекта ansible-deploys (шаринг рецептов между проектами)</li>
+              <li> Ссылочки </li>
+            </ul>
+        </section>
+
+        <section>
+          <h4>
+            Суть. Ansible - это про автоматизацию рутины
+          </h4>
+
+          <img width="800" height="600" data-src="ansible_config_management/automate_all_the_things.png" alt="arch1">
+        </section>
+
+        <section>
+          <h4>
+            В чем проблема?
+          </h4>
+
+          <p>
+            Допустим мы делаем новый проект - супер крутые админки на реакте под ключ :)
+          </p>
+          <p>
+            Которые позволяют каждому клиенту видеть и редактировать все свои посты в твиттере.
+          </p>
+        </section>
+
+        <section>
+          <h4>
+            Спросим экспертов :)
+          </h4>
+
+          <ul>
+            <li> За сколько сторипоинтов вы сделаете список постов по готовому API? </li>
+            <li> А за сколько сторипоинтов вы сделаете так, чтобы все доехало на продакшн хост и заработало там? </li>
+            <li> А на 10 хостов для 10 клиентов? </li>
+            <li> А если на всех 10 хостах надо переодически обновлять node.js и другие зависимости? </li>
+          </ul>
+        </section>
+
+        <section>
+          <h4>
+            И тут мы понимаем
+          </h4>
+
+          <p>
+            Когда в процессе разработки появляется инфраструктура, то исчезает прозрачность
+          </p>
+
+          <p>
+            Чем больше хостов и зависимостей, тем дело хуже
+          </p>
+
+          <img width="440" height="360" data-src="ansible_config_management/orly.png" alt="arch1">
+        </section>
+
+        <section>
+          <h4>
+            В идеальном мире product developers ленивы и не повторяют одно и то же действие по 100 раз
+          </h4>
+
+          <img width="360" height="440" data-src="ansible_config_management/thinking_fox.png" alt="arch1">
+
+          <p>
+            Работаем мозгами, а не руками (но сначала все же немного руками)
+          </p>
+        </section>
+
+        <section>
+          <p>
+            Создаем новый проект на реакте
+          </p>
+          <pre><code class="bash">
+            npm install -g create-react-app
+            create-react-app test-admin
+            cd test-admin/
+            yarn add admin-on-rest
+            yarn start
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code class="es6">
+            // in src/App.js
+            import React from 'react';
+            import { jsonServerRestClient, Admin, Resource  } from 'admin-on-rest';
+
+            import { PostList  } from './posts';
+
+            const App = () => (
+             <Admin restClient={jsonServerRestClient('http://jsonplaceholder.typicode.com')}>
+                <Resource name="posts" list={PostList} />
+              </Admin>
+            );
+
+            export default App;
+          </code></pre>
+
+          <small><p>
+            * Господа фронтендеры, презентационный движок меня дискредитирует :) Я знаю, что компоненты - это константы и пишутся с большой буквы! :)
+          </p></small>
+        </section>
+
+        <section>
+          <pre><code class="js">
+            // in src/posts.js
+            import React from 'react';
+            import { List, Datagrid, TextField  } from 'admin-on-rest';
+
+            export const PostList = (props) => (
+              <List {...props}>
+                <Datagrid>
+                  <TextField source="id" />
+                  <TextField source="title" />
+                  <TextField source="body" />
+                </Datagrid>
+              </List>
+            );
+          </code></pre>
+          
+          <small><p>
+            * Господа фронтендеры, презентационный движок меня дискредитирует :) Я знаю, что компоненты - это константы и пишутся с большой буквы! :)
+          </p></small>
+        </section>
+
+        <section>
+          <h4>
+             Ну вот и все :) проект готов!
+          </h4>
+
+          <p>
+            Или нет? Что делать со сборкой?
+          </p>
+
+          <img width="440" height="360" data-src="ansible_config_management/terminal_js_build.png" alt="arch1">
+
+          <pre><code class="bash">
+            yarn run build
+          </code></pre>
+        </section>
+
+        <section>
+          <p> Готовим сервер </p>
+
+          <ul>
+            <li> Создаем себе пользователя на серверной машине </li>
+            <li> Подкладываем публичный ключ со своего мака на сервер в ~/.ssh/authorized_keys </li>
+            <li> Ставим питон интерпретатор на сервере </li>
+          </ul>
+
+          <pre><code class="bash">
+          sudo add-apt-repository ppa:fkrull/deadsnakes
+          sudo apt-get update
+          sudo apt-get install python2.7
+          sudo ln -sf /usr/bin/python2.7 /usr/bin/python
+          </code></pre>
+
+        </section>
+
+        <section>
+          <p> Лив кодинг session. Добавляем деплой к нашему проекту </p>
+          <a href="http://github.com/davydenkovm/test-admin-deploy">Можно посмотреть в сорцы тут (ветки stage_0, stage_1, stage_2)</a>
+        </section>
+
+        <section>
+          <h4> stage_0 (Деплой)</h4>
+
+          <ul>
+            <li> Создаем <b>Inventory File</b> - hosts </li>
+            <li> Создаем <b> playbook </b> - deploy.yml </li>
+            <li> Создаем <b> роль </b> - roles/deploy_frontend.yml </li>
+            <li> Подключаем роль к плейбуку - деплой написан </li>
+          </ul>
+
+          <pre><code class="bash">
+            ansible-playbook -i hosts deploy.yml
+          </code></pre>
+        </section>
+
+        <section>
+          <h4> stage_1 (Setup) </h4>
+
+          <small>
+          <p> 
+            Ставим готовый пакет из репозитория ролей (ближайшая аналогия rubygems, npm, dockerhub)
+          </p>
+          </small>
+          <pre><code class="bash">
+            ansible-galaxy install jdauphant.nginx
+          </code></pre>
+
+          <small>
+          <p> 
+            Держим зависимости вместе с самописными ролями
+          </p>
+          </small>
+
+          <pre><code class="bash">
+            mv ~/.ansible/roles/jdauphant.nginx roles/
+          </code></pre>
+
+          <small>
+          <ul>
+            <li> Пишем собственную роль copy_nginx_configs, которая будет подкладывать nginx config из вашего шаблона (copy_nginx_configs) </li>
+            <li> Создаем новый playbook setup.yml, куда подключаем написанные только что роли </li>
+          </ul>
+          </small>
+
+          <pre><code class="bash">
+            ansible-playbook -i hosts setup.yml -K
+          </code></pre>
+        </section>
+
+        <section>
+          <h4> stage_2 (Удобности и нюансы)</h4>
+
+          <small>
+          <ul>
+            <li> создаем папку <b> vars </b>, и выносим все различия между сценариями деплоя в переменные, прячем в vars пароли и энкриптим секреты </li>
+            <li> пишем <b>Makefile</b>, чтобы не запоминать сложные ключи и иметь возможность шарить переменные между задачами </li>
+            <li> игнорируем ошибки через <b>ignore_errors </b>(docker swarm init, например, кидает ошибку, если кластер уже создан)</li>
+            <li> регистрируем результаты linux команд через <b>register</b>, а через <b>debug </b>кидаем результат в output </li>
+            <li> если запутались в переменных - всегда есть <b>strategy</b>: <b>debug </b>для дебага свалившейся задачи (p vars)</li>
+            <li> используем <b>with_items </b>для работы с циклами, а также чтобы размножить шаблон с разными переменными </li>
+            <li> пользуемся <b>become </b>и <b>become_user</b>, а также <b>ansible_become_pass</b>, и не пользуемся <b>ansible_become_user </b>(т.к. это переменная, живущая на уровне connection и ее ничем не перебить)</li>
+            <li> разделяем sudo пользователей и deployer пользователей во избежание секьюрити проблем (а также sudo роли и не sudo роли)</li>
+            <li> смотрим ansible.cfg, читаем best-practices в доках</li>
+            <li> запускаем роли удаленно через дополнительный пакет <b>ansible-toolbox</b>(динамическая генерация плейбуков)</li>
+            <li> TODO: тестируем роли на вагранте включая проверки на идемпотентность (полезный эффект только при 1м прогоне)</li>
+            <li> TODO: Прописываем у ролей зависимости</li>
+          </ul>
+          </small>
+        </section>
+
+        <section>
+          <h4> Выводы </h4>
+
+          <ul>
+            <li> Ансибл - простой и понятный инструмент для малых и средних проектов </li>
+            <li> Можно постепенно автоматизировать процессы настройки серверов </li>
+            <li> Много решений уже написаны за вас умными людьми - пользуйтесь :)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>
+            Ссылочки
+          </h3>
+
+          <ul>
+            <li> </li>
+            <li> </li>
+            <li> <a href="">Доки</a> </li>
+          </ul>
+        </section>
+
+        <section style="text-align: left;">
+          <h1>THE END</h1>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="../lib/js/head.min.js"></script>
+    <script src="../js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '../plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../plugin/zoom-js/zoom.js', async: true },
+          { src: '../plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
